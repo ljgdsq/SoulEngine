@@ -7,8 +7,8 @@ add_executable(Example2 main.cpp)
 # 设置C++标准
 set_property(TARGET Example2 PROPERTY CXX_STANDARD 17)
 
-# 链接引擎库（当Engine模块完成后）
-# target_link_libraries(Example2 PRIVATE SoulEngine)
+# 链接引擎库
+target_link_libraries(Example2 PRIVATE SoulEngine)
 
 # 链接第三方库
 target_link_libraries(Example2 PRIVATE spdlog::spdlog)
