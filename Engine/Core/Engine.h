@@ -43,11 +43,17 @@ namespace SoulEngine {
          * @brief 检查引擎是否正在运行
          */
         bool IsRunning() const { return m_isRunning; }
+
+    /**
+     * @brief 获取当前渲染器（可能为空，取决于后端是否启用）
+     */
+    class Renderer* GetRenderer() const { return m_renderer.get(); }
         
     private:
-        bool m_isRunning = false;
-        bool m_initialized = false;
-        std::unique_ptr<Application> m_application;
+    bool m_isRunning = false;
+    bool m_initialized = false;
+    std::unique_ptr<Application> m_application;
+    std::unique_ptr<class Renderer> m_renderer; // 由RendererFactory创建
         
         // 禁用拷贝
         Engine(const Engine&) = delete;

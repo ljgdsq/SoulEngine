@@ -11,10 +11,28 @@ set(CMAKE_CXX_STANDARD 17)                # 使用C++17标准
 set(CMAKE_CXX_STANDARD_REQUIRED ON)       # 必须使用指定的C++标准
 set(CMAKE_CXX_EXTENSIONS OFF)             # 禁用编译器特定扩展
 
+# Windows/MSVC: 将源文件按UTF-8处理，消除中文注释导致的C4819告警
+if (MSVC)
+  add_compile_options(/utf-8)
+endif()
+
 # 集成第三方库
 include(FetchContent)                     # 引入FetchContent模块用于下载依赖
 
 set(CMAKE_FOLDER "thirdlib") # 这会影响所有接下来引入的目标
+
+# 图形后端可选项（默认均关闭以保持最小依赖）
+option(SOULENGINE_WITH_OPENGL "Enable OpenGL backend" OFF)
+option(SOULENGINE_WITH_DX12   "Enable DirectX 12 backend" OFF)
+option(SOULENGINE_WITH_VULKAN "Enable Vulkan backend" OFF)
+
+# 当启用 OpenGL 后端时，纳入独立依赖模块（优先 find_package，必要时 FetchContent）
+if (SOULENGINE_WITH_OPENGL)
+  message(STATUS "SoulEngine: OpenGL backend ENABLED")
+  include(${CMAKE_SOURCE_DIR}/cmake/backends/OpenGLDeps.cmake)
+endif()
+
+message(STATUS "SoulEngine load cmake")
 
 # 添加spdlog日志库
 FetchContent_Declare(
@@ -24,6 +42,21 @@ FetchContent_Declare(
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(spdlog)
+
+
+    message(STATUS "SoulEngine: fetching glfw via FetchContent")
+    FetchContent_Declare(
+      glfw
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG 3.4
+      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DOCS    OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL       OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(glfw)
+
 
 # 如果启用测试，添加GoogleTest
 if(USE_TEST)

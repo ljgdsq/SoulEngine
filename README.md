@@ -18,6 +18,3 @@ cd SoulEngine
 cmake -B build -S .
 cmake --build build --config Release
 
-# Run examples
-[Example1.exe](http://_vscodecontentref_/0)
-[Example2.exe](http://_vscodecontentref_/1)

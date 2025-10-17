@@ -1,5 +1,7 @@
 #include "Engine.h"
 #include "Application.h"
+#include "Renderer/RendererFactory.h"
+#include "Renderer/Renderer.h"
 #include <iostream>
 #include <chrono>
 
@@ -24,8 +26,20 @@ namespace SoulEngine {
         
         spdlog::info("Initializing SoulEngine...");
         
-        // 初始化各个子系统
-        // TODO: 初始化渲染器
+        // 初始化渲染器（通过工厂选择后端）
+        m_renderer = RendererFactory::CreateDefault();
+        if (m_renderer) {
+            if (!m_renderer->Initialize()) {
+                spdlog::error("Renderer initialization failed");
+                m_renderer.reset();
+            } else {
+                spdlog::info("Renderer initialized successfully");
+            }
+        } else {
+            spdlog::warn("No renderer backend enabled; running without renderer");
+        }
+        
+        // 初始化其他子系统
         // TODO: 初始化物理系统
         // TODO: 初始化音频系统
         
@@ -47,10 +61,15 @@ namespace SoulEngine {
             m_application.reset();
         }
         
+        // 关闭渲染器
+        if (m_renderer) {
+            m_renderer->Shutdown();
+            m_renderer.reset();
+        }
+        
         // 关闭各个子系统
         // TODO: 关闭音频系统
         // TODO: 关闭物理系统  
-        // TODO: 关闭渲染器
         
         m_isRunning = false;
         m_initialized = false;
@@ -93,7 +112,9 @@ namespace SoulEngine {
             }
             
             // 渲染
+            if (m_renderer) m_renderer->BeginFrame();
             m_application->Render();
+            if (m_renderer) m_renderer->EndFrame();
             
             // 检查退出条件
             if (m_application->ShouldClose()) {

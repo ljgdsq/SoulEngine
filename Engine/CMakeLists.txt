@@ -10,6 +10,8 @@ file(GLOB_RECURSE ENGINE_SOURCES
     "Core/*.h"
     "Renderer/*.cpp" 
     "Renderer/*.h"
+    "Renderer/OpenGL/*.cpp"
+    "Renderer/OpenGL/*.h"
     "Physics/*.cpp"
     "Physics/*.h"
     "Audio/*.cpp"
@@ -22,6 +24,7 @@ file(GLOB_RECURSE ENGINE_HEADERS
     "Core/*.hpp"
     "Renderer/*.h"
     "Renderer/*.hpp" 
+    "Renderer/OpenGL/*.h"
     "Physics/*.h"
     "Physics/*.hpp"
     "Audio/*.h"
@@ -46,6 +49,18 @@ target_include_directories(SoulEngine
 
 # 链接第三方库
 target_link_libraries(SoulEngine PUBLIC spdlog::spdlog)
+
+# 当启用 OpenGL 后端时，向引擎目标添加宏与链接依赖
+if (SOULENGINE_WITH_OPENGL)
+    target_compile_definitions(SoulEngine PUBLIC SOULENGINE_ENABLE_OPENGL=1)
+    # 链接抽象依赖目标，避免直接依赖第三方目标名
+    if (TARGET SoulEngine::OpenGLDeps)
+        target_link_libraries(SoulEngine PUBLIC SoulEngine::OpenGLDeps)
+    else()
+        message(WARNING "SoulEngine::OpenGLDeps not found; ensure root included OpenGLDeps.cmake")
+    endif()
+    # 可在此追加 OpenGL 加载库（如 glad/glew），当前仅使用系统提供
+endif()
 
 # 设置IDE中的文件夹结构
 set_target_properties(SoulEngine PROPERTIES FOLDER "Engine")
