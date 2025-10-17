@@ -6,8 +6,8 @@ cmake_minimum_required(VERSION 3.14)
 project(SoulEngine LANGUAGES CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# 设置C++标准为C++17
-set(CMAKE_CXX_STANDARD 17)                # 使用C++17标准
+# 设置C++标准为C++20
+set(CMAKE_CXX_STANDARD 20)                # 使用C++20标准
 set(CMAKE_CXX_STANDARD_REQUIRED ON)       # 必须使用指定的C++标准
 set(CMAKE_CXX_EXTENSIONS OFF)             # 禁用编译器特定扩展
 

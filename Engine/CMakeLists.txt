@@ -34,8 +34,8 @@ file(GLOB_RECURSE ENGINE_HEADERS
 # 创建SoulEngine静态库
 add_library(SoulEngine STATIC ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 
-# 设置C++标准
-set_property(TARGET SoulEngine PROPERTY CXX_STANDARD 17)
+# 设置C++标准（使用 C++20 以启用 concepts 等特性）
+set_property(TARGET SoulEngine PROPERTY CXX_STANDARD 20)
 
 # 设置包含目录
 target_include_directories(SoulEngine 
@@ -66,5 +66,4 @@ endif()
 set_target_properties(SoulEngine PROPERTIES FOLDER "Engine")
 
 # 为IDE组织源文件结构
-source_group("Core" FILES ${ENGINE_SOURCES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${ENGINE_HEADERS})

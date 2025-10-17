@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "Renderer/RendererFactory.h"
 #include "Renderer/Renderer.h"
+#include "RendererSystem.h"
 #include <iostream>
 #include <chrono>
 
@@ -26,17 +27,11 @@ namespace SoulEngine {
         
         spdlog::info("Initializing SoulEngine...");
         
-        // 初始化渲染器（通过工厂选择后端）
-        m_renderer = RendererFactory::CreateDefault();
-        if (m_renderer) {
-            if (!m_renderer->Initialize()) {
-                spdlog::error("Renderer initialization failed");
-                m_renderer.reset();
-            } else {
-                spdlog::info("Renderer initialized successfully");
-            }
-        } else {
-            spdlog::warn("No renderer backend enabled; running without renderer");
+        // 注册并初始化系统
+        m_systems.Register(std::make_unique<RendererSystem>());
+        if (!m_systems.InitializeAll(*this)) {
+            spdlog::error("Engine systems initialization failed");
+            return false;
         }
         
         // 初始化其他子系统
@@ -61,11 +56,8 @@ namespace SoulEngine {
             m_application.reset();
         }
         
-        // 关闭渲染器
-        if (m_renderer) {
-            m_renderer->Shutdown();
-            m_renderer.reset();
-        }
+        // 关闭所有系统
+        m_systems.ShutdownAll();
         
         // 关闭各个子系统
         // TODO: 关闭音频系统
@@ -89,7 +81,7 @@ namespace SoulEngine {
         }
         
         m_application = std::move(app);
-        
+        m_application->SetEngine(this);
         if (!m_application->Initialize()) {
             spdlog::error("Failed to initialize application");
             return -1;
@@ -112,9 +104,10 @@ namespace SoulEngine {
             }
             
             // 渲染
-            if (m_renderer) m_renderer->BeginFrame();
+            if (auto* rs = m_systems.Get<RendererSystem>()) rs->BeginFrame();
+            if (auto* r = GetRenderer()) r->Clear();
             m_application->Render();
-            if (m_renderer) m_renderer->EndFrame();
+            if (auto* rs = m_systems.Get<RendererSystem>()) rs->EndFrame();
             
             // 检查退出条件
             if (m_application->ShouldClose()) {
@@ -129,6 +122,10 @@ namespace SoulEngine {
     Engine& Engine::GetInstance() {
         static Engine instance;
         return instance;
+    }
+
+    Renderer* Engine::GetRenderer() const {
+        return GetService<Renderer>();
     }
     
 } // namespace SoulEngine

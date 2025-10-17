@@ -45,9 +45,11 @@ namespace SoulEngine {
          */
         const std::string& GetName() const { return m_name; }
         
+        void SetEngine(class Engine* engine) { m_engine = engine; }
     protected:
         std::string m_name;
         bool m_shouldClose = false;
+        class Engine* m_engine = nullptr;
     };
     
 } // namespace SoulEngine

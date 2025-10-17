@@ -9,6 +9,7 @@ public:
         spdlog::info("Initializing {}", GetName());
         m_frameCount = 0;
         m_maxFrames = 100; // Run for 100 frames
+        
         return true;
     }
     
