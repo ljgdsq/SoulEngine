@@ -5,9 +5,11 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_FOLDER "Launcher")
 
 # 添加各个样例子目录
-add_subdirectory(DXDemo)
+
+if(WIN32)
+    add_subdirectory(DXDemo)
+endif(WIN32)
 add_subdirectory(OpenGLDemo)
-add_subdirectory(Example3)
 
 # 可以继续添加更多样例
 # add_subdirectory(ExampleAdvanced)

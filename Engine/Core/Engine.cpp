@@ -1,50 +1,38 @@
 #include "Engine.h"
 #include "Application.h"
-#include "Renderer/RendererFactory.h"
-#include "Renderer/Renderer.h"
 #include <iostream>
-#include <chrono>
-
+#include "Timer.h"
 namespace SoulEngine {
     
     Engine::Engine() {
-        spdlog::info("SoulEngine created");
+        Logger::Log("SoulEngine created");
     }
     
     Engine::~Engine() {
         if (m_initialized) {
             Shutdown();
         }
-        spdlog::info("SoulEngine destroyed");
+
+        Logger::Log("SoulEngine destroyed");
     }
     
     bool Engine::Initialize() {
         if (m_initialized) {
-            spdlog::warn("Engine already initialized");
+            Logger::Warn("Engine already initialized");
             return true;
         }
-        
-        spdlog::info("Initializing SoulEngine...");
-        
-        // 初始化渲染器（通过工厂选择后端）
-        m_renderer = RendererFactory::CreateDefault();
-        if (m_renderer) {
-            if (!m_renderer->Initialize()) {
-                spdlog::error("Renderer initialization failed");
-                m_renderer.reset();
-            } else {
-                spdlog::info("Renderer initialized successfully");
-            }
-        } else {
-            spdlog::warn("No renderer backend enabled; running without renderer");
-        }
+
+        Logger::Log("Initializing SoulEngine...");
+        Timer::GetInstance().Initialize();
+        // 初始化渲染器
+
         
         // 初始化其他子系统
         // TODO: 初始化物理系统
         // TODO: 初始化音频系统
         
         m_initialized = true;
-        spdlog::info("SoulEngine initialized successfully");
+        Logger::Log("SoulEngine initialized successfully");
         return true;
     }
     
@@ -52,9 +40,9 @@ namespace SoulEngine {
         if (!m_initialized) {
             return;
         }
-        
-        spdlog::info("Shutting down SoulEngine...");
-        
+
+        Logger::Log("Shutting down SoulEngine...");
+
         // 关闭应用程序
         if (m_application) {
             m_application->Shutdown();
@@ -62,73 +50,52 @@ namespace SoulEngine {
         }
         
         // 关闭渲染器
-        if (m_renderer) {
-            m_renderer->Shutdown();
-            m_renderer.reset();
-        }
+ 
         
         // 关闭各个子系统
         // TODO: 关闭音频系统
         // TODO: 关闭物理系统  
         
-        m_isRunning = false;
         m_initialized = false;
-        
-        spdlog::info("SoulEngine shutdown complete");
+
+        Logger::Log("SoulEngine shutdown complete");
     }
     
     int Engine::Run(std::unique_ptr<Application> app) {
         if (!m_initialized) {
-            spdlog::error("Engine must be initialized before running");
+            Logger::Error("Engine must be initialized before running");
             return -1;
         }
         
         if (!app) {
-            spdlog::error("Application cannot be null");
+            Logger::Error("Application cannot be null");
             return -1;
         }
         
         m_application = std::move(app);
         
         if (!m_application->Initialize()) {
-            spdlog::error("Failed to initialize application");
+            Logger::Error("Failed to initialize application");
             return -1;
         }
+
+        Logger::Log("Starting main loop...");
         
-        spdlog::info("Starting main loop...");
-        m_isRunning = true;
-        
-        auto lastTime = std::chrono::high_resolution_clock::now();
-        
+        auto timer = &Timer::GetInstance();
         // 主循环
-        while (m_isRunning) {
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            auto deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
-            lastTime = currentTime;
-            
+        while (!m_application->ShouldClose()) {
+            timer->Update();
+
             // 更新应用程序
-            if (!m_application->Update(deltaTime)) {
-                break;
-            }
+            m_application->Update(timer->GetDeltaTime());
             
             // 渲染
-            if (m_renderer) m_renderer->BeginFrame();
             m_application->Render();
-            if (m_renderer) m_renderer->EndFrame();
-            
-            // 检查退出条件
-            if (m_application->ShouldClose()) {
-                break;
-            }
+         
         }
         
-        spdlog::info("Main loop ended");
+        Logger::Log("Main loop ended");
         return 0;
-    }
-    
-    Engine& Engine::GetInstance() {
-        static Engine instance;
-        return instance;
     }
     
 } // namespace SoulEngine

@@ -39,7 +39,7 @@ namespace SoulEngine {
  */
 #define SOULENGINE_MAIN(AppClass) \
     int main() { \
-        auto& engine = SoulEngine::Engine::GetInstance(); \
+        SoulEngine::Engine engine; \
         if (!engine.Initialize()) { \
             return -1; \
         } \

@@ -22,7 +22,7 @@ include(FetchContent)                     # 引入FetchContent模块用于下载
 set(CMAKE_FOLDER "thirdlib") # 这会影响所有接下来引入的目标
 
 # 图形后端可选项（默认均关闭以保持最小依赖）
-option(SOULENGINE_WITH_OPENGL "Enable OpenGL backend" OFF)
+option(SOULENGINE_WITH_OPENGL "Enable OpenGL backend" ON)
 option(SOULENGINE_WITH_DX12   "Enable DirectX 12 backend" OFF)
 option(SOULENGINE_WITH_VULKAN "Enable Vulkan backend" OFF)
 
@@ -42,21 +42,6 @@ FetchContent_Declare(
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(spdlog)
-
-
-    message(STATUS "SoulEngine: fetching glfw via FetchContent")
-    FetchContent_Declare(
-      glfw
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG 3.4
-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_DOCS    OFF CACHE BOOL "" FORCE)
-    set(GLFW_INSTALL       OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(glfw)
-
 
 # 如果启用测试，添加GoogleTest
 if(USE_TEST)

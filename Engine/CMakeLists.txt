@@ -16,6 +16,8 @@ file(GLOB_RECURSE ENGINE_SOURCES
     "Physics/*.h"
     "Audio/*.cpp"
     "Audio/*.h"
+    "Log/*.cpp"
+    "Log/*.h"
 )
 
 # 收集头文件用于IDE显示
@@ -29,6 +31,8 @@ file(GLOB_RECURSE ENGINE_HEADERS
     "Physics/*.hpp"
     "Audio/*.h"
     "Audio/*.hpp"
+    "Log/*.h"
+    "Log/*.hpp"
 )
 
 # 创建SoulEngine静态库
@@ -44,6 +48,7 @@ target_include_directories(SoulEngine
         ${CMAKE_CURRENT_SOURCE_DIR}/Core
         ${CMAKE_CURRENT_SOURCE_DIR}/Renderer
         ${CMAKE_CURRENT_SOURCE_DIR}/Physics
+        ${CMAKE_CURRENT_SOURCE_DIR}/Log
         ${CMAKE_CURRENT_SOURCE_DIR}/Audio
 )
 

@@ -38,9 +38,14 @@ endif()
 # Add GLAD from ThirdParty if present
 set(_SE_GLAD_ROOT "${CMAKE_SOURCE_DIR}/ThirdParty/glad")
 if (EXISTS "${_SE_GLAD_ROOT}/src/gl.c" AND NOT TARGET glad)
+  # Enable C language support
+  enable_language(C)
   add_library(glad STATIC "${_SE_GLAD_ROOT}/src/gl.c")
   target_include_directories(glad PUBLIC "${_SE_GLAD_ROOT}/include")
-  set_target_properties(glad PROPERTIES FOLDER "thirdlib/OpenGL")
+  set_target_properties(glad PROPERTIES 
+    FOLDER "thirdlib/OpenGL"
+    LINKER_LANGUAGE C
+  )
 endif()
 
 # Find system OpenGL library

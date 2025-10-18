@@ -21,9 +21,8 @@ namespace SoulEngine {
         /**
          * @brief 更新应用程序逻辑
          * @param deltaTime 上一帧到当前帧的时间间隔(秒)
-         * @return true to continue, false to exit
          */
-        virtual bool Update(float deltaTime) = 0;
+        virtual void Update(float deltaTime) = 0;
         
         /**
          * @brief 渲染应用程序
