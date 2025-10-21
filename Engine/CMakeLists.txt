@@ -18,12 +18,15 @@ file(GLOB_RECURSE ENGINE_SOURCES
     "Audio/*.h"
     "Log/*.cpp"
     "Log/*.h"
+    "Window/*.cpp"
+    "Window/*.h"
 )
 
 # 收集头文件用于IDE显示
 file(GLOB_RECURSE ENGINE_HEADERS
     "Core/*.h"
     "Core/*.hpp"
+    "Core/*.inl"
     "Renderer/*.h"
     "Renderer/*.hpp" 
     "Renderer/OpenGL/*.h"
@@ -33,6 +36,8 @@ file(GLOB_RECURSE ENGINE_HEADERS
     "Audio/*.hpp"
     "Log/*.h"
     "Log/*.hpp"
+    "Window/*.h"
+    "Window/*.hpp"
 )
 
 # 创建SoulEngine静态库
@@ -71,5 +76,4 @@ endif()
 set_target_properties(SoulEngine PROPERTIES FOLDER "Engine")
 
 # 为IDE组织源文件结构
-source_group("Core" FILES ${ENGINE_SOURCES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${ENGINE_HEADERS})

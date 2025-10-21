@@ -18,7 +18,6 @@ public:
     void Clear() override;
 
 private:
-    GLFWwindow* m_window = nullptr;
     bool m_initialized = false;
 };
 

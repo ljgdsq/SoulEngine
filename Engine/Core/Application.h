@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-
+#include "Window/IWindow.h"
 namespace SoulEngine {
     
     /**
@@ -47,6 +47,10 @@ namespace SoulEngine {
     protected:
         std::string m_name;
         bool m_shouldClose = false;
+        IWindow* m_window = nullptr;
+
+        public:
+        void SetWindow(IWindow* window) { m_window = window; }
     };
     
 } // namespace SoulEngine

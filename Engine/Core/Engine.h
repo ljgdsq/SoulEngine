@@ -3,8 +3,10 @@
 #include <memory>
 #include <string>
 #include "Define.h"
-#include "Log/Logger.h"
+#include <vector>
 
+#include "Log/Logger.h"
+#include "Core/SystemInterface.h"
 namespace SoulEngine
 {
 
@@ -39,9 +41,26 @@ namespace SoulEngine
          */
         int Run(std::unique_ptr<Application> app);
 
+        // Template system management functions are declared here and
+        // implemented in Engine.inl (included at the end of this header).
+        template <class T, class... Args>
+        T* RegisterSystem(Args&&... args);
+
+        template <class T>
+        void UnregisterSystem();
+
+        template <class T>
+        T* GetSystem() const;
+
+        void SortSystemsByPriority();
+
+
     private:
         bool m_initialized = false;
         std::unique_ptr<Application> m_application;
+        std::vector<std::unique_ptr<SystemInterface>> m_systems;
     };
 
 } // namespace SoulEngine
+
+#include "Engine.inl"
