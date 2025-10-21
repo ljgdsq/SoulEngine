@@ -155,7 +155,7 @@ temp/
 *~
 
 # Third-party libraries (if not using submodules)
-ThirdParty/*/
+
 !ThirdParty/CMakeLists.txt
 !ThirdParty/README.md
 
