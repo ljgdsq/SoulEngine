@@ -13,7 +13,7 @@ namespace SoulEngine {
         /**
          * @brief 初始化渲染器
          */
-        virtual bool Initialize() = 0;
+        virtual bool Initialize(class IWindow * window) = 0;
         
         /**
          * @brief 开始新的一帧渲染
@@ -34,6 +34,11 @@ namespace SoulEngine {
          * @brief 清除屏幕
          */
         virtual void Clear() = 0;
+
+        /**
+         * @brief 交换前后缓冲区
+         */
+        virtual void SwapBuffers() = 0;
     };
     
 } // namespace SoulEngine

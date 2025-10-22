@@ -2,23 +2,26 @@
 
 #include "Renderer/Renderer.h"
 
-struct GLFWwindow;
 
-namespace SoulEngine {
+namespace SoulEngine
+{
+    class IWindow;
 
-class OpenGLRenderer final : public Renderer {
-public:
-    OpenGLRenderer();
-    ~OpenGLRenderer() override;
+    class OpenGLRenderer final : public Renderer
+    {
+    public:
+        OpenGLRenderer();
+        ~OpenGLRenderer() override;
 
-    bool Initialize() override;
-    void BeginFrame() override;
-    void EndFrame() override;
-    void Shutdown() override;
-    void Clear() override;
+        bool Initialize(IWindow* window) override;
+        void BeginFrame() override;
+        void EndFrame() override;
+        void Shutdown() override;
+        void Clear() override;
+        void SwapBuffers() override;
 
-private:
-    bool m_initialized = false;
-};
-
+    private:
+        bool m_initialized = false;
+        IWindow* m_window = nullptr;
+    };
 } // namespace SoulEngine

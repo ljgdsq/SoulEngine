@@ -20,10 +20,7 @@ namespace SoulEngine
         renderer_ = std::make_unique<OpenGLRenderer>();
 #else
         Logger::LogWarning("RendererFactory: no renderer backend enabled. Returning nullptr");
-        spdlog::warn("RendererFactory: no renderer backend enabled. Returning nullptr");
 #endif
-
-        if (renderer_) return renderer_->Initialize();
         return true;
     }
 

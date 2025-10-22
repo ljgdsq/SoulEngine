@@ -5,7 +5,6 @@
 #include "Window/WindowSystem.h"
 #include "Core/Input.h"
 
-#include <iostream>
 
 namespace SoulEngine {
     
@@ -36,7 +35,9 @@ namespace SoulEngine {
         // 初始化渲染器
         RegisterSystem<RenderSystem>();
 
-        Input::GetInstance().Initialize(GetSystem<WindowSystem>()->GetWindow());
+        auto window= GetSystem<WindowSystem>()->GetWindow();
+        GetSystem<RenderSystem>()->GetRenderer()->Initialize(window);
+        Input::GetInstance().Initialize(window);
 
         // 初始化其他子系统
         // TODO: 初始化物理系统
@@ -105,8 +106,8 @@ namespace SoulEngine {
             Input::GetInstance().Update();
             auto deltaTime = timer->GetDeltaTime();
             // update system
-            for(auto it =m_systems.begin();it!=m_systems.end();++it ){
-                (*it)->Update(deltaTime);
+            for (const auto& system : m_systems) {
+                system->Update(deltaTime);
             }
         
             // 更新应用程序
@@ -117,7 +118,7 @@ namespace SoulEngine {
             m_application->Render();
             renderer->EndFrame();
 
-            window->SwapBuffers();
+            renderer->SwapBuffers();
         }
         
         Logger::Log("Main loop ended");

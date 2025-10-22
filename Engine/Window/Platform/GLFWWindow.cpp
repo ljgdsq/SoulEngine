@@ -40,12 +40,14 @@ namespace SoulEngine
 
         glfwMakeContextCurrent(m_window);
         glfwSetWindowUserPointer(m_window, this);
-        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow *window, int width, int height)
-                                       {
+        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
+        {
             auto self = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
-            if (self->m_framebufferSizeCallback){
+            if (self->m_framebufferSizeCallback)
+            {
                 self->m_framebufferSizeCallback(width, height);
-            } });
+            }
+        });
     }
 
     void GLFWWindow::SetTitle(const std::string &title)

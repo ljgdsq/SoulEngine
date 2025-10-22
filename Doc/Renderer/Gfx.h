@@ -1,0 +1,104 @@
+#pragma once
+
+#include <cstdint>
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+namespace SoulEngine::Gfx
+{
+    enum class BufferKind : uint8_t { Vertex, Index, Constant, Storage, Indirect, Staging };
+    enum class BufferUsage : uint8_t { Default, Immutable, Dynamic, Staging };
+
+    enum class CpuAccessFlags : uint8_t { None = 0, Read = 1 << 0, Write = 1 << 1 };
+    inline CpuAccessFlags operator|(CpuAccessFlags a, CpuAccessFlags b) {
+        return static_cast<CpuAccessFlags>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+    }
+
+    enum class BindFlags : uint32_t {
+        None = 0,
+        VertexBuffer     = 1u << 0,
+        IndexBuffer      = 1u << 1,
+        ConstantBuffer   = 1u << 2,
+        ShaderResource   = 1u << 3,
+        UnorderedAccess  = 1u << 4,
+        Indirect         = 1u << 5,
+    };
+
+    inline BindFlags operator|(BindFlags a, BindFlags b) {
+        return static_cast<BindFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+    }
+
+    enum class IndexFormat : uint8_t { UInt16, UInt32 };
+
+    enum class DataFormat : uint16_t {
+        Unknown = 0,
+        R32_Float,
+        R32G32_Float,
+        R32G32B32_Float,
+        R32G32B32A32_Float,
+        R8G8B8A8_UNorm,
+    };
+
+    struct BufferDesc {
+        std::size_t    size = 0;
+        BufferKind     kind = BufferKind::Vertex;
+        BufferUsage    usage = BufferUsage::Default;
+        BindFlags      bindFlags = BindFlags::None;
+        CpuAccessFlags cpuAccess = CpuAccessFlags::None;
+        std::size_t    stride = 0;                 // optional, for structured buffers
+        IndexFormat    indexFormat = IndexFormat::UInt32; // only for Index buffers
+        const char*    name = nullptr;             // debug name
+    };
+
+    struct SubresourceData {
+        const void* data = nullptr;
+        std::size_t size = 0;
+        std::size_t offset = 0;
+    };
+
+    enum class MapMode : uint8_t { Read, Write, WriteDiscard, WriteNoOverwrite };
+
+    struct VertexAttribute {
+        uint16_t location = 0;      // or semantic index
+        DataFormat format = DataFormat::Unknown;
+        uint32_t offset = 0;        // byte offset within vertex
+        uint16_t bindingSlot = 0;   // vertex buffer slot
+        uint16_t stepRate = 1;      // 1 per-vertex, >1 for instancing
+    };
+
+    class IBuffer {
+    public:
+        virtual ~IBuffer() = default;
+        virtual const BufferDesc& GetDesc() const = 0;
+        virtual void Update(const SubresourceData& src) = 0;
+        virtual void* Map(MapMode mode) = 0;
+        virtual void Unmap() = 0;
+    };
+
+    class IVertexInputLayout {
+    public:
+        virtual ~IVertexInputLayout() = default;
+    };
+
+    class IDevice {
+    public:
+        virtual ~IDevice() = default;
+        virtual std::shared_ptr<IBuffer> CreateBuffer(const BufferDesc& desc, const SubresourceData* initial = nullptr) = 0;
+        virtual std::shared_ptr<IVertexInputLayout> CreateVertexInputLayout(const VertexAttribute* attrs, uint32_t count) = 0;
+
+        // Capability query examples
+        virtual std::size_t MinConstantBufferAlignment() const = 0;
+    };
+
+    class IContext {
+    public:
+        virtual ~IContext() = default;
+        virtual void SetVertexBuffers(uint32_t startSlot, IBuffer* const* buffers, const uint32_t* strides, const uint32_t* offsets, uint32_t count) = 0;
+        virtual void SetIndexBuffer(IBuffer* buffer, IndexFormat fmt) = 0;
+        virtual void SetConstantBuffer(uint32_t stage, uint32_t slot, IBuffer* buffer) = 0;
+        virtual void SetVertexInputLayout(IVertexInputLayout* layout) = 0;
+        virtual void Draw(uint32_t vertexCount, uint32_t startVertex) = 0;
+        virtual void DrawIndexed(uint32_t indexCount, uint32_t startIndex, int32_t baseVertex) = 0;
+    };
+}

@@ -6,19 +6,18 @@
 
 namespace SoulEngine
 {
-
     int WindowSystem::GetPriority() const
     {
-        return 5; // 很早初始化
+        return 5; 
     }
 
     bool WindowSystem::Initialize()
     {
         Logger::Log("Initializing WindowSystem...");
         // 在这里初始化窗口系统（例如GLFW）
-        #if defined(SOULENGINE_ENABLE_OPENGL)
+#if defined(SOULENGINE_ENABLE_OPENGL)
         m_window = new GLFWWindow();
-        #endif
+#endif
         if (m_window)
         {
             WindowConfig config;
@@ -33,6 +32,7 @@ namespace SoulEngine
             Logger::Error("Failed to create window");
             return false;
         }
+        return true;
     }
 
     void WindowSystem::Update(float dt)
@@ -42,10 +42,11 @@ namespace SoulEngine
 
     void WindowSystem::Shutdown()
     {
-       Logger::Log("Shutting down WindowSystem...");
+        Logger::Log("Shutting down WindowSystem...");
         // 在这里关闭窗口系统
-
-        
+        if (m_window)
+        {
+            m_window->Destroy();
+        }
     }
-
 }
