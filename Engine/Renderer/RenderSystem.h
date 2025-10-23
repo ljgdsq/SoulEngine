@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/SystemInterface.h"
 #include "Renderer.h"
+#include "Gfx.h"
 #include <memory>
 namespace SoulEngine
 {
@@ -23,5 +24,9 @@ namespace SoulEngine
 
     public:
         Renderer *GetRenderer() const { return renderer_.get(); }
+
+        // Forward Gfx device/context if available
+        Gfx::IDevice* GetDevice() const { return renderer_ ? renderer_->GetGfxDevice() : nullptr; }
+        Gfx::IContext* GetContext() const { return renderer_ ? renderer_->GetGfxContext() : nullptr; }
     };
 }

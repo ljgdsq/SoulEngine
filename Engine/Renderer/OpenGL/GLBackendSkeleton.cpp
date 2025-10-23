@@ -1,6 +1,8 @@
 #include "Renderer/Gfx.h"
 #include <glad/gl.h>
 #include <cassert>
+
+#if 0
 namespace SoulEngine::Gfx::GL
 {
 
@@ -278,3 +280,5 @@ namespace SoulEngine::Gfx::GL
 
     // Gfx 实现将在这里添加
 } // namespace SoulEngine::Gfx
+
+#endif // 0

@@ -1,6 +1,10 @@
 #pragma once
 
 namespace SoulEngine {
+    namespace Gfx {
+        class IDevice;
+        class IContext;
+    }
     
     /**
      * @brief 渲染器基类 - 处理图形渲染
@@ -39,6 +43,10 @@ namespace SoulEngine {
          * @brief 交换前后缓冲区
          */
         virtual void SwapBuffers() = 0;
+
+        // Optional: expose Gfx device/context if renderer provides them
+        virtual Gfx::IDevice* GetGfxDevice() { return nullptr; }
+        virtual Gfx::IContext* GetGfxContext() { return nullptr; }
     };
     
 } // namespace SoulEngine

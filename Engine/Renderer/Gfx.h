@@ -1,5 +1,9 @@
+#pragma once
 #include <memory>
 #include <vector>
+#include <string>
+#include <cstdint>
+#include <cstddef>
 
 namespace SoulEngine::Gfx
 {
@@ -36,6 +40,8 @@ namespace SoulEngine::Gfx
         R8G8B8A8_UNorm,
     };
 
+    enum class ShaderStage : uint8_t { Vertex, Fragment, Geometry, Compute };
+
     struct BufferDesc
     {
         std::size_t  size=0;
@@ -66,6 +72,32 @@ namespace SoulEngine::Gfx
         uint32_t stepRate;
     };
 
+    struct ShaderDesc {
+        ShaderStage stage;
+        const char* source;      // UTF-8 source code string
+        const char* entryPoint;  // ignored for GL; required for some backends
+        const char* name;        // debug name
+    };
+
+    enum class UniformType : uint8_t { Float, Int, Vec2, Vec3, Vec4, Mat4, Unknown };
+
+    struct UniformInfo {
+        std::string name;
+        int location = -1;
+        UniformType type = UniformType::Unknown;
+        int arraySize = 1;
+    };
+
+    struct SamplerInfo {
+        std::string name;
+        int location = -1; // usually a uniform location
+    };
+
+    struct ProgramReflection {
+        std::vector<UniformInfo> uniforms;
+        std::vector<SamplerInfo> samplers;
+    };
+
 
 
 
@@ -83,11 +115,35 @@ namespace SoulEngine::Gfx
         virtual ~IVertexInputLayout() = default;
     };
 
+    class IShaderModule {
+    public:
+        virtual ~IShaderModule() = default;
+        virtual ShaderStage GetStage() const = 0;
+    };
+
+    class IProgram {
+    public:
+        virtual ~IProgram() = default;
+        virtual const ProgramReflection& GetReflection() const = 0;
+        // Convenience, name-based uniform setters (backend should bind current program as needed or assume already bound)
+        virtual void SetTexture(const char* name, int slot) = 0;
+        virtual void SetFloat(const char* name, float v) = 0;
+        virtual void SetInt(const char* name, int v) = 0;
+        virtual void SetVec2(const char* name, const float* v2) = 0;
+        virtual void SetVec3(const char* name, const float* v3) = 0;
+        virtual void SetVec4(const char* name, const float* v4) = 0;
+        virtual void SetMat4(const char* name, const float* m16, bool transpose=false) = 0;
+    };
+
     class IDevice {
     public:
         virtual ~IDevice() = default;
         virtual std::shared_ptr<IBuffer> CreateBuffer(const BufferDesc& desc, const SubresourceData* initial) = 0;
         virtual std::shared_ptr<IVertexInputLayout> CreateVertexInputLayout(const VertexAttribute* attrs, uint32_t count) = 0;
+        virtual std::shared_ptr<IShaderModule> CreateShaderModule(const ShaderDesc& desc) = 0;
+        virtual std::shared_ptr<IProgram> CreateProgram(const std::shared_ptr<IShaderModule>& vs,
+                                                       const std::shared_ptr<IShaderModule>& fs,
+                                                       const char* name = nullptr) = 0;
     };
 
     class IContext {
@@ -97,6 +153,7 @@ namespace SoulEngine::Gfx
         virtual void SetIndexBuffer(IBuffer* buffer, IndexFormat fmt) = 0;
         virtual void SetConstantBuffer(uint32_t stage, uint32_t slot, IBuffer* buffer) = 0;
         virtual void SetVertexInputLayout(IVertexInputLayout* layout) = 0;
+        virtual void BindProgram(IProgram* program) = 0;
         virtual void Draw(uint32_t vertexCount, uint32_t startVertex) = 0;
         virtual void DrawIndexed(uint32_t indexCount, uint32_t startIndex, int32_t baseVertex) = 0;
 

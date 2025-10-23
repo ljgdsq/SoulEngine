@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Renderer/Renderer.h"
+#include <memory>
 
 
 namespace SoulEngine
 {
     class IWindow;
+    namespace Gfx { class IDevice; class IContext; }
 
     class OpenGLRenderer final : public Renderer
     {
@@ -20,8 +22,15 @@ namespace SoulEngine
         void Clear() override;
         void SwapBuffers() override;
 
+        // Gfx accessors
+        Gfx::IDevice* GetGfxDevice() override;
+        Gfx::IContext* GetGfxContext() override;
+
     private:
         bool m_initialized = false;
         IWindow* m_window = nullptr;
+
+        std::shared_ptr<Gfx::IDevice> device_;
+        std::shared_ptr<Gfx::IContext> context_;
     };
 } // namespace SoulEngine
