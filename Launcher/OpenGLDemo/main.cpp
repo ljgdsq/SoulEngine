@@ -1,5 +1,6 @@
 #include <SoulEngine.h>
 #include "Core/ApplicationHelper.h"
+#include "Core/Timer.h"
 #include "EngineFileIO.h"
 #include "Input.h"
 
@@ -24,8 +25,8 @@ public:
         Logger::Log("MyApplication initialized");
         auto device = GetDevice();
         auto context = GetContext();
-        auto vsCode = EngineFileIO::LoadText("Shaders/base.vs.glsl");
-        auto fsCode = EngineFileIO::LoadText("Shaders/base.fs.glsl");
+        auto vsCode = EngineFileIO::LoadText("Shaders/base2.vs.glsl");
+        auto fsCode = EngineFileIO::LoadText("Shaders/base2.fs.glsl");
 
         auto vs = device->CreateShaderModule({Gfx::ShaderStage::Vertex, vsCode.c_str(), "base"});
         auto fs = device->CreateShaderModule({Gfx::ShaderStage::Fragment, fsCode.c_str(), "base"});
@@ -98,7 +99,7 @@ public:
             {1, Gfx::DataFormat::R32G32B32_Float, 0, 1},
         };
 
-        uint32_t strides[] = {sizeof(float) * 3, sizeof(float) * 3}; // pos[3] + color[3] = 6 floats
+        uint32_t strides[] = {sizeof(float) * 3, sizeof(float) * 3};
         uint32_t offsets[] = {0, 0};
         auto vertexBufferPtr1 = vertexBuffer1.get();
         auto vertexBufferPtr2 = vertexBuffer2.get();
@@ -112,6 +113,9 @@ public:
 
     void Update(float deltaTime) override
     {
+
+        Logger::Log("time: {:.2f} deltaTime: {:.4f}", Timer::GetInstance().GetElapsedTime(), deltaTime);
+        
         if (Input::GetKeyDown(KeyCode::Escape))
         {
             m_window->SetShouldClose(true);
@@ -128,6 +132,27 @@ public:
         else if (Input::GetKeyDown(KeyCode::F3))
         {
             GetContext()->SetPolygonMode(PolygonMode::Point);
+        }
+
+        static bool dynamicColor = true;
+        if (dynamicColor)
+        {
+            float time = Timer::GetInstance().GetElapsedTime();
+            float g = (sin(time) + 1.0f) / 2.0f;
+            float c[] = {1.0f, 0.0f, g, 1.0f};
+            program->SetVec4("u_Color", c);
+        }
+
+        
+        if (Input::GetKeyDown(KeyCode::F5))
+        {
+            dynamicColor = !dynamicColor;
+    
+        }
+        else if (Input::GetKeyDown(KeyCode::F7))
+        {
+            float c[] = {1.0f, 1.0f, 1.0f, 1.0f};
+            program->SetVec4("u_Color", c);
         }
     }
 
