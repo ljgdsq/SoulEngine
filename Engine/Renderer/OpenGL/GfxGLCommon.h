@@ -15,8 +15,8 @@ namespace SoulEngine::Gfx
         case BufferKind::Vertex:   return GL_ARRAY_BUFFER;
         case BufferKind::Index:    return GL_ELEMENT_ARRAY_BUFFER;
         case BufferKind::Constant: return GL_UNIFORM_BUFFER;
-        case BufferKind::Storage:  return GL_SHADER_STORAGE_BUFFER;
-        case BufferKind::Indirect: return GL_DRAW_INDIRECT_BUFFER;
+        // case BufferKind::Storage:  return GL_SHADER_STORAGE_BUFFER;/
+        // case BufferKind::Indirect: return GL_DRAW_INDIRECT_BUFFER;
         case BufferKind::Staging:  return GL_COPY_READ_BUFFER; // simple default
         default: return GL_ARRAY_BUFFER;
         }

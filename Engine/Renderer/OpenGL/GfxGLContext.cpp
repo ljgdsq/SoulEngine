@@ -6,7 +6,6 @@
 #include "Renderer/OpenGL/GfxGLBuffer.h"
 #include "Renderer/OpenGL/GfxGLProgram.h"
 #include <glad/glad.h>
-#include <algorithm>
 
 namespace SoulEngine::Gfx
 {

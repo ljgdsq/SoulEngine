@@ -89,7 +89,7 @@ namespace SoulEngine {
         
         m_application = std::move(app);
         m_application->SetWindow(GetSystem<WindowSystem>()->GetWindow());
-        if (!m_application->Initialize()) {
+        if (!m_application->Initialize(this)) {
             Logger::Error("Failed to initialize application");
             return -1;
         }

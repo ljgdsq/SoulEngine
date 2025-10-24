@@ -26,3 +26,6 @@ endif()
 
 # 设置IDE中的文件夹
 set_target_properties(OpenGLDemo PROPERTIES FOLDER "Launcher/Examples")
+
+# 使用通用函数拷贝资源
+copy_resources_to_target(OpenGLDemo)

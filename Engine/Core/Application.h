@@ -16,7 +16,7 @@ namespace SoulEngine {
          * @brief 初始化应用程序
          * @return true if successful
          */
-        virtual bool Initialize() = 0;
+        virtual bool Initialize(class Engine* engine) = 0;
         
         /**
          * @brief 更新应用程序逻辑
@@ -48,7 +48,7 @@ namespace SoulEngine {
         std::string m_name;
         bool m_shouldClose = false;
         IWindow* m_window = nullptr;
-
+        class Engine* engine;
         public:
         void SetWindow(IWindow* window) { m_window = window; }
     };

@@ -57,6 +57,40 @@ endif(USE_TEST)
 
 set(CMAKE_FOLDER "") # 重置
 
+# 添加资源拷贝函数
+function(copy_resources_to_target TARGET_NAME)
+    # 拷贝到可执行文件的输出目录和项目生成目录，确保兼容性
+    if (CMAKE_CONFIGURATION_TYPES)
+        # 多配置生成器 (Visual Studio, Xcode)
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying from: ${CMAKE_SOURCE_DIR}/Resources"
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying to executable output: ${CMAKE_BINARY_DIR}/$<CONFIG>/Examples/Resources"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/Resources
+            ${CMAKE_BINARY_DIR}/$<CONFIG>/Examples/Resources
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying to project build dir: ${CMAKE_CURRENT_BINARY_DIR}/Resources"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/Resources
+            ${CMAKE_CURRENT_BINARY_DIR}/Resources
+            COMMENT "Copying Resources directory to ${TARGET_NAME} output and build directories"
+        )
+    else()
+        # 单配置生成器 (Makefile, Ninja)
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying from: ${CMAKE_SOURCE_DIR}/Resources"
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying to executable output: ${CMAKE_BINARY_DIR}/Examples/Resources"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/Resources
+            ${CMAKE_BINARY_DIR}/Examples/Resources
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying to project build dir: ${CMAKE_CURRENT_BINARY_DIR}/Resources"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/Resources
+            ${CMAKE_CURRENT_BINARY_DIR}/Resources
+            COMMENT "Copying Resources directory to ${TARGET_NAME} output and build directories"
+        )
+    endif()
+endfunction()
+
 # 添加各个模块
 add_subdirectory(Engine)
 add_subdirectory(Launcher)

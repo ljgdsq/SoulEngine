@@ -30,7 +30,7 @@ namespace SoulEngine::Gfx
         case ShaderStage::Vertex:   stage = GL_VERTEX_SHADER; break;
         case ShaderStage::Fragment: stage = GL_FRAGMENT_SHADER; break;
         case ShaderStage::Geometry: stage = GL_GEOMETRY_SHADER; break;
-        case ShaderStage::Compute:  stage = GL_COMPUTE_SHADER; break;
+        // case ShaderStage::Compute:  stage = GL_COMPUTE_SHADER; break;
         }
         auto mod = std::make_shared<GLShaderModule>(stage, desc.source, desc.name);
         return mod;

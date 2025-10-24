@@ -43,7 +43,7 @@ namespace SoulEngine
 
         m_initialized = true;
         Logger::Log("OpenGLRenderer initialized successfully");
-
+        
         return true;
     }
 

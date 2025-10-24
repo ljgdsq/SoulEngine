@@ -12,7 +12,7 @@ namespace SoulEngine::Gfx
         case ShaderStage::Vertex:   return GL_VERTEX_SHADER;
         case ShaderStage::Fragment: return GL_FRAGMENT_SHADER;
         case ShaderStage::Geometry: return GL_GEOMETRY_SHADER;
-        case ShaderStage::Compute:  return GL_COMPUTE_SHADER;
+        // case ShaderStage::Compute:  return GL_COMPUTE_SHADER;
         default: return GL_VERTEX_SHADER;
         }
     }
