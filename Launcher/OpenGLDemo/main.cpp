@@ -1,24 +1,26 @@
 #include <SoulEngine.h>
-
+#include "Core/ApplicationHelper.h"
 #include "EngineFileIO.h"
-#include "Renderer/RenderSystem.h"
 #include "Input.h"
+
 using namespace SoulEngine;
 using namespace SoulEngine::Gfx;
-class MyApplication : public SoulEngine::Application
+
+class MyApplication : public SoulEngine::ApplicationBase
 {
 public:
-    MyApplication() : Application("SoulEngine OpenGL Demo") {}
+    MyApplication() : ApplicationBase("SoulEngine OpenGL Demo") {}
 
     std::shared_ptr<IProgram> program;
     std::shared_ptr<IVertexInputLayout> layout;
-    std::shared_ptr<IBuffer> vertexBuffer; // 保存 Buffer 的生命周期
-    bool Initialize(Engine* engine) override
+    std::shared_ptr<IBuffer> vertexBuffer1;
+    std::shared_ptr<IBuffer> vertexBuffer2;
+    
+    bool OnInitialize() override
     {
-        this->engine = engine;
         Logger::Log("MyApplication initialized");
-        auto device = engine->GetSystem<RenderSystem>()->GetDevice();
-        auto context = engine->GetSystem<RenderSystem>()->GetContext();
+        auto device = GetDevice();
+        auto context = GetContext();
         auto vsCode=EngineFileIO::LoadText("Shaders/base.vs.glsl");
         auto fsCode=EngineFileIO::LoadText("Shaders/base.fs.glsl");
 
@@ -27,33 +29,60 @@ public:
         program = device->CreateProgram(vs,fs,"base");
 
         struct Vertex { float pos[3]; float color[3]; };
-        // Vertex data
-        std::vector<Vertex> vertices = {
-            {{-0.6f,-0.5f,0.f}, {1.f,0.f,0.f}},
-            {{ 0.6f,-0.5f,0.f}, {0.f,1.f,0.f}},
-            {{ 0.0f, 0.6f,0.f}, {0.f,0.f,1.f}},
+        struct Pos
+        {
+            float x, y, z;
+        };
+
+        struct Color
+        {
+            float r, g, b;
+        };
+
+        std::vector<Pos> positions = {
+            {-0.6f,-0.5f,0.f},
+            { 0.6f,-0.5f,0.f},
+            { 0.0f, 0.6f,0.f},
+        };
+
+        std::vector<Color> colors = {
+            {1.f,0.f,0.f},
+            {0.f,1.f,0.f},
+            {0.f,0.f,1.f},
         };
         
         
-        Gfx::BufferDesc bufferDesc{};
-        bufferDesc.size = vertices.size() * sizeof(Vertex);
-        bufferDesc.kind = Gfx::BufferKind::Vertex;
-        bufferDesc.usage = Gfx::BufferUsage::Immutable;
-        bufferDesc.bindFlags = Gfx::BindFlags::VertexBuffer;
-        auto data=Gfx::SubresourceData{vertices.data(), bufferDesc.size, 0};
-        vertexBuffer = device->CreateBuffer(bufferDesc,&data); // 保存 shared_ptr
+        Gfx::BufferDesc bufferDesc1{};
+        bufferDesc1.size = positions.size() * sizeof(Pos);
+        bufferDesc1.kind = Gfx::BufferKind::Vertex;
+        bufferDesc1.usage = Gfx::BufferUsage::Immutable;
+        bufferDesc1.bindFlags = Gfx::BindFlags::VertexBuffer;
+        auto data=Gfx::SubresourceData{positions.data(), bufferDesc1.size, 0};
+        vertexBuffer1 = device->CreateBuffer(bufferDesc1,&data); 
+
+
+        Gfx::BufferDesc bufferDesc2{};
+        bufferDesc2.size = colors.size() * sizeof(Color);
+        bufferDesc2.kind = Gfx::BufferKind::Vertex;
+        bufferDesc2.usage = Gfx::BufferUsage::Immutable;
+        bufferDesc2.bindFlags = Gfx::BindFlags::VertexBuffer;
+        auto data2=Gfx::SubresourceData{colors.data(), bufferDesc2.size, 0};
+        vertexBuffer2 = device->CreateBuffer(bufferDesc2,&data2); 
+        
 
         Gfx::VertexAttribute attrs[]={
-            {0,Gfx::DataFormat::R32G32B32_Float,offsetof(Vertex,pos),0,},
-            {1,Gfx::DataFormat::R32G32B32_Float,offsetof(Vertex,color),0},
+            {0,Gfx::DataFormat::R32G32B32_Float,0,0,},
+            {1,Gfx::DataFormat::R32G32B32_Float,0,1},
         };
         layout=device->CreateVertexInputLayout(attrs,2);
 
         context->SetVertexInputLayout(layout.get());       
-        uint32_t strides[] = {sizeof(float) * 6}; // pos[3] + color[3] = 6 floats
-        uint32_t offsets[] = {0};
-        auto vertexBufferPtr = vertexBuffer.get();
-        context->SetVertexBuffers(0, &vertexBufferPtr, strides, offsets, 1);
+        uint32_t strides[] = {sizeof(float) * 3,sizeof(float)*3}; // pos[3] + color[3] = 6 floats
+        uint32_t offsets[] = {0,0};
+        auto vertexBufferPtr1 = vertexBuffer1.get();
+        auto vertexBufferPtr2 = vertexBuffer2.get();
+        IBuffer* vertexBuffers[] = {vertexBufferPtr1, vertexBufferPtr2};
+        context->SetVertexBuffers(0, vertexBuffers, strides, offsets, 2);
         
         return true;
     }
@@ -69,7 +98,7 @@ public:
 
     void Render() override
     {
-        auto context = engine->GetSystem<RenderSystem>()->GetContext();
+        auto context = GetContext();
         context->BindProgram(program.get());
         context->SetVertexInputLayout(layout.get());
         context->Draw(3,0);
@@ -82,7 +111,7 @@ public:
 
     bool ShouldClose() const override
     {
-        return m_window->ShouldClose();
+        return GetWindow()->ShouldClose();
     }
 };
 

@@ -13,10 +13,20 @@ namespace SoulEngine {
         virtual ~Application() = default;
         
         /**
-         * @brief 初始化应用程序
+         * @brief 初始化应用程序 - 由 Engine 调用，会自动设置 engine 指针
+         * @param engine 引擎实例指针
          * @return true if successful
          */
-        virtual bool Initialize(class Engine* engine) = 0;
+        bool Initialize(class Engine* engine) {
+            this->engine = engine;
+            return OnInitialize();
+        }
+        
+        /**
+         * @brief 用户需要重写的初始化方法
+         * @return true if successful
+         */
+        virtual bool OnInitialize() = 0;
         
         /**
          * @brief 更新应用程序逻辑
@@ -45,10 +55,20 @@ namespace SoulEngine {
         const std::string& GetName() const { return m_name; }
         
     protected:
+        /**
+         * @brief 获取引擎实例
+         */
+        class Engine* GetEngine() const { return engine; }
+        
+        /**
+         * @brief 获取窗口实例
+         */
+        IWindow* GetWindow() const { return m_window; }
+        
         std::string m_name;
         bool m_shouldClose = false;
         IWindow* m_window = nullptr;
-        class Engine* engine;
+        class Engine* engine = nullptr;
         public:
         void SetWindow(IWindow* window) { m_window = window; }
     };

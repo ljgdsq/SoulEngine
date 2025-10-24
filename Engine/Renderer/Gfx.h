@@ -65,10 +65,10 @@ namespace SoulEngine::Gfx
 
     struct VertexAttribute
     {
-        uint32_t location;
-        DataFormat format;
-        uint32_t offset;
-        uint32_t bindingSlot;
+        uint32_t location; 
+        DataFormat format;  
+        uint32_t offset;    
+        uint32_t bindingSlot; 
         uint32_t stepRate;
     };
 
