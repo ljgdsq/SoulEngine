@@ -22,6 +22,14 @@ namespace SoulEngine::Gfx
         void SetConstantBuffer(uint32_t stage, uint32_t slot, IBuffer* buffer) override;
         void SetVertexInputLayout(IVertexInputLayout* layout) override;
         void BindProgram(IProgram* program) override;
+        
+        // 渲染状态设置
+        void SetPolygonMode(PolygonMode mode) override;
+        void SetCullMode(CullMode mode) override;
+        void SetBlendMode(BlendMode mode) override;
+        void SetDepthTest(bool enable) override;
+        void SetScissorTest(bool enable, int x = 0, int y = 0, int width = 0, int height = 0) override;
+        
         void Draw(uint32_t vertexCount, uint32_t startVertex) override;
         void DrawIndexed(uint32_t indexCount, uint32_t startIndex, int32_t baseVertex) override;
 

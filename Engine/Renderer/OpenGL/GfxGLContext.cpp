@@ -73,7 +73,7 @@ namespace SoulEngine::Gfx
         const void* indices = reinterpret_cast<const void*>(static_cast<uintptr_t>(startIndex * (type == GL_UNSIGNED_SHORT ? 2u : 4u)));
         glDrawElementsBaseVertex(GL_TRIANGLES, static_cast<GLsizei>(indexCount), type, indices, baseVertex);
     }
-
+   // todo: 优化项 : 缓存当前绑定状态，避免重复绑定
     void GfxGLContext::ApplyVertexArrayBindings()
     {
         if (!currentLayout_)
@@ -112,6 +112,81 @@ namespace SoulEngine::Gfx
 
         // Unbind array buffer to avoid accidental state leakage
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    void GfxGLContext::SetPolygonMode(PolygonMode mode)
+    {
+        GLenum glMode;
+        switch (mode)
+        {
+            case PolygonMode::Fill:  glMode = GL_FILL; break;
+            case PolygonMode::Line:  glMode = GL_LINE; break;
+            case PolygonMode::Point: glMode = GL_POINT; break;
+            default: return;
+        }
+        glPolygonMode(GL_FRONT_AND_BACK, glMode);
+    }
+
+    void GfxGLContext::SetCullMode(CullMode mode)
+    {
+        switch (mode)
+        {
+            case CullMode::None:
+                glDisable(GL_CULL_FACE);
+                break;
+            case CullMode::Front:
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT);
+                break;
+            case CullMode::Back:
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_BACK);
+                break;
+        }
+    }
+
+    void GfxGLContext::SetBlendMode(BlendMode mode)
+    {
+        switch (mode)
+        {
+            case BlendMode::None:
+                glDisable(GL_BLEND);
+                break;
+            case BlendMode::Alpha:
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                break;
+            case BlendMode::Additive:
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                break;
+        }
+    }
+
+    void GfxGLContext::SetDepthTest(bool enable)
+    {
+        if (enable)
+        {
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+        }
+        else
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
+    }
+
+    void GfxGLContext::SetScissorTest(bool enable, int x, int y, int width, int height)
+    {
+        if (enable)
+        {
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(x, y, width, height);
+        }
+        else
+        {
+            glDisable(GL_SCISSOR_TEST);
+        }
     }
 }
 

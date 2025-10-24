@@ -146,6 +146,10 @@ namespace SoulEngine::Gfx
                                                        const char* name = nullptr) = 0;
     };
 
+    enum class PolygonMode : uint8_t { Fill, Line, Point };
+    enum class CullMode : uint8_t { None, Front, Back };
+    enum class BlendMode : uint8_t { None, Alpha, Additive };
+
     class IContext {
     public:
         virtual ~IContext() = default;
@@ -154,6 +158,14 @@ namespace SoulEngine::Gfx
         virtual void SetConstantBuffer(uint32_t stage, uint32_t slot, IBuffer* buffer) = 0;
         virtual void SetVertexInputLayout(IVertexInputLayout* layout) = 0;
         virtual void BindProgram(IProgram* program) = 0;
+        
+        // 渲染状态设置
+        virtual void SetPolygonMode(PolygonMode mode) = 0;
+        virtual void SetCullMode(CullMode mode) = 0;
+        virtual void SetBlendMode(BlendMode mode) = 0;
+        virtual void SetDepthTest(bool enable) = 0;
+        virtual void SetScissorTest(bool enable, int x = 0, int y = 0, int width = 0, int height = 0) = 0;
+        
         virtual void Draw(uint32_t vertexCount, uint32_t startVertex) = 0;
         virtual void DrawIndexed(uint32_t indexCount, uint32_t startIndex, int32_t baseVertex) = 0;
 
