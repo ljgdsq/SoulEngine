@@ -4,11 +4,20 @@ cmake_minimum_required(VERSION 3.14)
 # 设置当前模块的文件夹名称
 set(CMAKE_FOLDER "Editor")
 
-# 这里将来可以添加编辑器相关的可执行文件
-# add_executable(SoulEditor
-#     main.cpp
-#     EditorApplication.cpp
-#     # 其他源文件...
-# )
-#
-# target_link_libraries(SoulEditor PRIVATE SoulEngine spdlog::spdlog)
+add_executable(Editor
+    EditorMain.cpp
+    # EditorApplication.cpp
+    # 其他源文件...
+)
+
+if(SOULENGINE_WITH_OPENGL)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/imgui ${CMAKE_BINARY_DIR}/ThirdParty/imgui)
+        add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/ImGuiFileDialog ${CMAKE_BINARY_DIR}/ThirdParty/ImGuiFileDialog)
+    target_compile_definitions(Editor PRIVATE SOULENGINE_WITH_OPENGL)
+    target_link_libraries(ImGuiFileDialog PRIVATE imgui)
+    target_link_libraries(Editor PRIVATE SoulEngine::OpenGLDeps imgui ImGuiFileDialog SoulEngine)
+else()
+    target_link_libraries(Editor PRIVATE SoulEngine )
+endif()
+
+

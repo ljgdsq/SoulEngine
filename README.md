@@ -16,5 +16,5 @@ cd SoulEngine
 
 # Build the project
 cmake -B build -S .
-cmake --build build --config Release
+cmake --build build --config Release --target OpenGLDemo
 
