@@ -39,8 +39,6 @@ public:
     {
         Logger::Log("SoulEditor initialized");
         
-        // 设置窗口不可resize（启动时）
-        WindowSystem::SetWindowResizable(GetWindow()->GetGLFWWindow(), false);
         
         // 初始化ImGui管理器
         imguiManager_ = std::make_unique<ImGuiManager>();

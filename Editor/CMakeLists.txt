@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_FOLDER "Editor")
 set(_SE_PREV_CMAKE_FOLDER "${CMAKE_FOLDER}")
 add_executable(Editor
-    EditorMain.cpp
+    *.cpp
     # EditorApplication.cpp
     # 其他源文件...
 )

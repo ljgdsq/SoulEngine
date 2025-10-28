@@ -10,6 +10,9 @@ using namespace SoulEngine;
 using namespace SoulEngine::Gfx;
 using namespace SoulEditor;
 
+
+#if 0
+
 /**
  * @brief SoulEditor 主应用程序类
  */
@@ -585,3 +588,5 @@ public:
 
 // 使用SoulEngine宏简化main函数
 SOULENGINE_MAIN(MyApplication)
+
+#endif
