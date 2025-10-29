@@ -1,13 +1,13 @@
 #include "Project.h"
-#include <fstream>
 #include <filesystem>
-
+#include "nlohmann/json.hpp"
+#include "Core/EngineFileIO.h"
 namespace SoulEngine
 {
     bool Project::CreateNewProject(const std::string &path, const std::string &name)
     {
         // 设置项目基本信息
-        projectPath_ = path;
+        projectPath_ = (std::filesystem::path(path) / name).string();
         settings_.name = name;
         settings_.description = "";
         
@@ -88,7 +88,7 @@ namespace SoulEngine
         isDirty_ = false;
     }
 
-    bool Project::CreateProjectDirectories()
+    bool Project::CreateProjectDirectories() const
     {
         try
         {
@@ -97,7 +97,6 @@ namespace SoulEngine
             std::filesystem::create_directories(GetAssetsPath());
             std::filesystem::create_directories(GetLibraryPath());
             std::filesystem::create_directories(GetLogsPath());
-            
             return true;
         }
         catch (const std::filesystem::filesystem_error&)
@@ -114,69 +113,22 @@ namespace SoulEngine
     bool Project::LoadProjectFile()
     {
         std::filesystem::path projectFile = std::filesystem::path(projectPath_) / "project.json";
-        
-        std::ifstream file(projectFile);
-        if (!file.is_open())
-        {
-            return false;
-        }
-        
-        // 简单的键值对解析
-        std::string line;
-        while (std::getline(file, line))
-        {
-            // 跳过空行和注释
-            if (line.empty() || line[0] == '#' || line[0] == '/')
-                continue;
-                
-            size_t pos = line.find('=');
-            if (pos != std::string::npos)
-            {
-                std::string key = line.substr(0, pos);
-                std::string value = line.substr(pos + 1);
-                
-                // 去除前后空格
-                key.erase(0, key.find_first_not_of(" \t\""));
-                key.erase(key.find_last_not_of(" \t\"") + 1);
-                value.erase(0, value.find_first_not_of(" \t\""));
-                value.erase(value.find_last_not_of(" \t\"") + 1);
-                
-                if (key == "name")
-                {
-                    settings_.name = value;
-                }
-                else if (key == "version")
-                {
-                    settings_.version = value;
-                }
-                else if (key == "description")
-                {
-                    settings_.description = value;
-                }
-            }
-        }
-        
-        file.close();
+        auto content = EngineFileIO::LoadText(projectFile.string());
+        auto json = nlohmann::json::parse(content);
+        settings_.name = json.value("name", "Untitled");
+        settings_.version = json.value("version", "1.0");
+        settings_.description = json.value("description", "");
         return true;
     }
 
     bool Project::SaveProjectFile()
     {
         std::filesystem::path projectFile = std::filesystem::path(projectPath_) / "project.json";
-        
-        std::ofstream file(projectFile);
-        if (!file.is_open())
-        {
-            return false;
-        }
-        
-        // 写入简单的键值对格式
-        file << "# SoulEngine Project File\n";
-        file << "name=" << settings_.name << "\n";
-        file << "version=" << settings_.version << "\n";
-        file << "description=" << settings_.description << "\n";
-        
-        file.close();
+        nlohmann::json json;
+        json["name"] = settings_.name;
+        json["version"] = settings_.version;
+        json["description"] = settings_.description;
+        EngineFileIO::SaveText(projectFile.string(),json.dump(4));
         return true;
     }
 

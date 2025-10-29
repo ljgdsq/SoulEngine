@@ -1,5 +1,10 @@
 ﻿#include "StartupWindow.h"
 
+#include "ImGuiFileDialog.h"
+#include "Logger.h"
+#include "Project/Project.h"
+#include "Project/ProjectManager.h"
+#include "Util/FileUtil.hpp"
 namespace SoulEditor
 {
     void SoulEditor::StartupWindow::OnInitialize()
@@ -34,6 +39,7 @@ namespace SoulEditor
         RenderBackground();
         RenderTitle();
         RenderActionButtons();
+        HandleFileDialogs();
         ImGui::End();
     }
 
@@ -100,13 +106,13 @@ namespace SoulEditor
         
         if (ImGui::Button("Create Project", ImVec2(200, 40))) 
         {
-           
+            ImGuiFileDialog::Instance()->OpenDialog("CreateProjectDlg", "Select Project Folder", ".");
         }
 
         ImGui::SameLine();
         if (ImGui::Button("Open Project", ImVec2(200, 40))) 
         {
-        
+            ImGuiFileDialog::Instance()->OpenDialog("OpenProjectDlg", "Open Project", ".json");
         }
         
         PopWelcomeStyles();
@@ -127,5 +133,79 @@ namespace SoulEditor
     {
         ImGui::PopStyleVar(1);      // 弹出样式变量
         ImGui::PopStyleColor(3);   // 弹出颜色设置
+    }
+
+    void StartupWindow::HandleFileDialogs()
+    {
+        HandleCreateProjectDialog();
+        HandleOpenProjectDialog();
+    }
+
+    void StartupWindow::HandleCreateProjectDialog()
+    {
+        // 文件对话框的通用设置
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 center = ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f, 
+                              viewport->WorkPos.y + viewport->WorkSize.y * 0.5f);
+        ImVec2 dialogSize = ImVec2(800, 600);
+        
+        // Handle CreateProject dialog result - 限制对话框的移动和缩放，并居中显示
+        ImGui::SetNextWindowPos(ImVec2(center.x - dialogSize.x * 0.5f, center.y - dialogSize.y * 0.5f), ImGuiCond_Appearing);
+        
+        if (ImGuiFileDialog::Instance()->Display("CreateProjectDlg", 
+                                                ImGuiWindowFlags_NoResize | 
+                                                ImGuiWindowFlags_NoMove |
+                                                ImGuiWindowFlags_NoCollapse,
+                                                dialogSize, // 固定大小
+                                                dialogSize)) 
+        {
+            if (ImGuiFileDialog::Instance()->IsOk()) 
+            {
+                std::string folder=ImGuiFileDialog::Instance()->GetFilePathName();
+                SoulEngine::Logger::Log("Selected path for new project: {}", folder);
+                if (folder.empty())
+                {
+                    SoulEngine::Logger::Warn("No folder selected for new project.");
+                    folder = ImGuiFileDialog::Instance()->GetCurrentPath();
+                }
+                auto [path,name] = SoulEngine::FileUtil::ExtractDirectory(folder);
+                ProjectManager::GetInstance().CreateProject(path,name);
+                
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+    }
+
+    void StartupWindow::HandleOpenProjectDialog()
+    {
+        // 文件对话框的通用设置
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 center = ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f, 
+                              viewport->WorkPos.y + viewport->WorkSize.y * 0.5f);
+        ImVec2 dialogSize = ImVec2(800, 600);
+        
+        // Handle OpenProject dialog result - 限制对话框的移动和缩放，并居中显示
+        ImGui::SetNextWindowPos(ImVec2(center.x - dialogSize.x * 0.5f, center.y - dialogSize.y * 0.5f), ImGuiCond_Appearing);
+        
+        if (ImGuiFileDialog::Instance()->Display("OpenProjectDlg", 
+                                                ImGuiWindowFlags_NoResize | 
+                                                ImGuiWindowFlags_NoMove |
+                                                ImGuiWindowFlags_NoCollapse,
+                                                dialogSize, // 固定大小
+                                                dialogSize)) 
+        {
+            if (ImGuiFileDialog::Instance()->IsOk()) 
+            {
+                std::string folder=ImGuiFileDialog::Instance()->GetFilePathName();
+                SoulEngine::Logger::Log("Selected path for new project: {}", folder);
+                if (folder.empty())
+                {
+                    SoulEngine::Logger::Warn("No folder selected for new project.");
+                    folder = ImGuiFileDialog::Instance()->GetCurrentPath();
+                }
+                ProjectManager::GetInstance().OpenProject(folder);
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
     }
 }

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.14)
 # 设置当前模块的文件夹名称
 set(CMAKE_FOLDER "Editor")
 set(_SE_PREV_CMAKE_FOLDER "${CMAKE_FOLDER}")
-file(GLOB EDITOR_SOURCES
+file(GLOB_RECURSE EDITOR_SOURCES
     "*.cpp"
     "*.h"
 )

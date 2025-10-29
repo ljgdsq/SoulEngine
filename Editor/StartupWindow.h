@@ -27,6 +27,10 @@ namespace SoulEditor
         void PushWelcomeStyles();
         void PopWelcomeStyles();
 
+        void HandleFileDialogs();
+        void HandleCreateProjectDialog();
+        void HandleOpenProjectDialog();
+
     };
     REGISTER_WINDOW(StartupWindow);
 }

@@ -79,7 +79,7 @@ namespace SoulEngine
         bool isDirty_ = false;         // 是否有未保存的更改
         
         // 私有辅助方法
-        bool CreateProjectDirectories();
+        bool CreateProjectDirectories() const;
         bool CreateProjectFile();
         bool LoadProjectFile();
         bool SaveProjectFile();

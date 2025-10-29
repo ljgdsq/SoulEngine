@@ -60,5 +60,30 @@ namespace SoulEngine
             }
             return filePath.substr(lastDot + 1); // 返回扩展名，不包括点
         }
+
+        /// @brief 提取路径，父路径和当前文件夹的名称
+        /// @param filePath 文件路径  
+        /// @return 父路径和当前文件夹名称的pair
+        static std::pair<std::string, std::string> ExtractDirectory(const std::string &filePath)
+        {
+            if (filePath.empty())
+            {
+                return std::make_pair("", "");
+            }
+
+            std::filesystem::path path(filePath);
+    
+            // 如果路径以分隔符结尾，移除它
+            if (path.has_filename() == false && path.has_parent_path())
+            {
+                path = path.parent_path();
+            }
+
+            std::string parentPath = path.has_parent_path() ? path.parent_path().string() : "";
+            std::string folderName = path.has_filename() ? path.filename().string() : "";
+
+            return std::make_pair(parentPath, folderName);
+        }
+        
     };
 }
