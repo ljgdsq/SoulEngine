@@ -69,7 +69,7 @@ namespace SoulEngine {
         bool m_shouldClose = false;
         IWindow* m_window = nullptr;
         class Engine* engine = nullptr;
-        public:
+    public:
         void SetWindow(IWindow* window) { m_window = window; }
     };
     

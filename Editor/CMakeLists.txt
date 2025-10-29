@@ -4,13 +4,12 @@ cmake_minimum_required(VERSION 3.14)
 # 设置当前模块的文件夹名称
 set(CMAKE_FOLDER "Editor")
 set(_SE_PREV_CMAKE_FOLDER "${CMAKE_FOLDER}")
-add_executable(Editor
-    *.cpp
-    # EditorApplication.cpp
-    # 其他源文件...
+file(GLOB EDITOR_SOURCES
+    "*.cpp"
+    "*.h"
 )
 
-
+add_executable(Editor ${EDITOR_SOURCES})
 
 set(CMAKE_FOLDER "thirdlib")
 

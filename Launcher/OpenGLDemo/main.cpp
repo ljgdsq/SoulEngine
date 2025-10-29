@@ -3,7 +3,7 @@
 #include "Core/Timer.h"
 #include "EngineFileIO.h"
 #include "Input.h"
-
+#include "nlohmann/json.hpp"
 using namespace SoulEngine;
 using namespace SoulEngine::Gfx;
 
@@ -22,6 +22,10 @@ public:
 
     bool OnInitialize() override
     {
+        nlohmann::json j;
+        j["name"] = "SoulEngine";
+        
+        
         Logger::Log("MyApplication initialized");
         auto device = GetDevice();
         auto context = GetContext();

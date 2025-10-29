@@ -92,7 +92,10 @@ function(copy_resources_to_target TARGET_NAME)
 endfunction()
 
 # 添加各个模块
+set(CMAKE_FOLDER "thirdlib")
+add_subdirectory(ThirdParty/json)
 
+set(CMAKE_FOLDER "") # 重置
 
 add_subdirectory(Engine)
 add_subdirectory(Launcher)

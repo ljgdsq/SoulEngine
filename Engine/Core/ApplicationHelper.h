@@ -3,7 +3,7 @@
 #include "Application.h"
 #include "Engine.h"
 #include "Renderer/RenderSystem.h"
-
+#include "SoulEngine.h"
 namespace SoulEngine {
     
     /**
@@ -49,6 +49,10 @@ namespace SoulEngine {
         template<typename T>
         T* GetSystem() const {
             return GetEngine()->GetSystem<T>();
+        }
+
+        virtual bool ShouldClose() const override{
+            return m_window->ShouldClose();
         }
     };
     

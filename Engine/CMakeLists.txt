@@ -57,8 +57,6 @@ target_include_directories(SoulEngine
         ${CMAKE_CURRENT_SOURCE_DIR}/Audio
 )
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/ThirdParty/json ${CMAKE_BINARY_DIR}/ThirdParty/json)
-
 # 链接第三方库
 target_link_libraries(SoulEngine PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json)
 
