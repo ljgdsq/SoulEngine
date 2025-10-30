@@ -55,3 +55,13 @@ private:                                              \
     } while (0) // 在非调试模式下，断言不会执行任何操作
 
 #endif // _DEBUG
+
+
+
+#define NS_ENGINE namespace SoulEngine {
+#define END_NS_ENGINE }
+
+#define NS_EDITOR namespace SoulEditor {
+#define END_NS_EDITOR }
+
+

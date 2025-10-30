@@ -6,10 +6,15 @@ set(CMAKE_FOLDER "Engine")
 
 # 收集所有引擎源文件
 file(GLOB_RECURSE ENGINE_SOURCES
+    "*.h"
+    "*.hpp"
+    "*.inl"
     "Core/*.cpp"
     "Core/*.h"
     "Renderer/*.cpp" 
     "Renderer/*.h"
+    "Component/*.cpp" 
+    "Component/*.h"
     "Renderer/OpenGL/*.cpp"
     "Renderer/OpenGL/*.h"
     "Physics/*.cpp"
@@ -24,6 +29,9 @@ file(GLOB_RECURSE ENGINE_SOURCES
 
 # 收集头文件用于IDE显示
 file(GLOB_RECURSE ENGINE_HEADERS
+    "*.h"
+    "*.hpp"
+    "*.inl"
     "Core/*.h"
     "Core/*.hpp"
     "Core/*.inl"
@@ -52,6 +60,7 @@ target_include_directories(SoulEngine
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/Core
         ${CMAKE_CURRENT_SOURCE_DIR}/Renderer
+        ${CMAKE_CURRENT_SOURCE_DIR}/Component
         ${CMAKE_CURRENT_SOURCE_DIR}/Physics
         ${CMAKE_CURRENT_SOURCE_DIR}/Log
         ${CMAKE_CURRENT_SOURCE_DIR}/Audio
