@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include <memory>
 
+#include "EditorPrefs.h"
 #include "GuiManager.h"
 #include "Input.h"
 #include "Project/ProjectManager.h"
@@ -12,6 +13,7 @@ class EditorApplication : public SoulEngine::ApplicationBase
 public:
     bool OnInitialize() override
     {
+        SoulEditor::EditorPrefs::GetInstance().Initialize();
         m_window->SetResizable(false);
         m_window->SetTitle("SoulEditor");
         m_guiManager = std::make_unique<SoulEditor::GuiManager>();

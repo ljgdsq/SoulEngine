@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <imgui.h>
 #include <string>
 #include "WindowRegister.h"
 namespace SoulEditor

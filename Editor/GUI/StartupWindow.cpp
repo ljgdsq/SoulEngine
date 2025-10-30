@@ -117,8 +117,68 @@ namespace SoulEditor
         }
         
         PopWelcomeStyles();
+
+        RenderRecentProjects();
+        
         
         ImGui::EndChild();
+    }
+
+    void StartupWindow::RenderRecentProjects()
+    {
+        ProjectManager& projectManager = ProjectManager::GetInstance();
+        auto projects = projectManager.GetRecentProjects();
+    
+        if (projects.empty())
+        {
+            ImGui::Spacing();
+            return;
+        }
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+        // 标题
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.9f, 1.0f));
+        ImGui::TextWrapped("Recent Projects:");
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing();
+
+        // 简化版本 - 先不用表格，直接列表显示
+        for (size_t i = 0; i < std::min(projects.size(), size_t(5)); ++i)
+        {
+            const auto& projectPath = projects[i];
+            auto [parentPath, projectName] = SoulEngine::FileUtil::ExtractDirectory(projectPath);
+
+            // 项目信息
+            ImGui::Text("%s", projectName.c_str());
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "(%s)", projectPath.c_str());
+            ImGui::SameLine();
+        
+            std::string buttonId = "Open##" + std::to_string(i);
+            if (ImGui::SmallButton(buttonId.c_str()))
+            {
+                if (ProjectManager::GetInstance().OpenProject(projectPath))
+                {
+                    SoulEngine::Logger::Log("Opened recent project: {}", projectPath);
+                }
+                else
+                {
+                    projectManager.RemoveRecentProject(projectPath);
+                    SoulEngine::Logger::Error("Failed to open project, removed from recent list: {}", projectPath);
+                }
+            }
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::SmallButton("Clear Recent Projects"))
+        {
+            projectManager.ClearRecentProjects();
+        }
+        
     }
 
     void StartupWindow::PushWelcomeStyles()

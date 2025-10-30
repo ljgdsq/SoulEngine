@@ -11,6 +11,10 @@ file(GLOB_RECURSE EDITOR_SOURCES
 
 add_executable(Editor ${EDITOR_SOURCES})
 
+target_include_directories(Editor PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 set(CMAKE_FOLDER "thirdlib")
 
 if(SOULENGINE_WITH_OPENGL)

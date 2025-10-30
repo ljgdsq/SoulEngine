@@ -15,7 +15,12 @@ namespace SoulEditor
 
         void SetOnProjectCreatedCallback(const std::function<void()>& callback);
         std::shared_ptr<Project> GetCurrentProject();
+        std::vector<std::string> GetRecentProjects();
+        void RemoveRecentProject(const std::string& path);
+        void ClearRecentProjects();
 
+    private:
+        void AddToRecentProjects(const std::string& path);
     private:
         std::function<void()> onProjectOpenedCallback_;
         std::function<void()> onProjectCreatedCallback_;

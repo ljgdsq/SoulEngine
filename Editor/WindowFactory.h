@@ -2,7 +2,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include "GuiWindow.h"
+#include "GUI/GuiWindow.h"
 
 namespace SoulEditor
 {

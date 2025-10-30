@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "GLFW/glfw3.h"
 #include <vector>
-#include "GuiWindow.h"
+#include "GUI/GuiWindow.h"
 
 namespace SoulEditor
 {

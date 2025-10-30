@@ -3,7 +3,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include "ContentBrowser.h"
+#include "GUI/ContentBrowser.h"
 #include "Logger.h"
 #include "WindowFactory.h"
 #include "Project/ProjectManager.h"
