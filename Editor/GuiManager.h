@@ -6,7 +6,6 @@
 #include "GLFW/glfw3.h"
 #include <vector>
 #include "GuiWindow.h"
-#include <unordered_map>
 
 namespace SoulEditor
 {
@@ -22,11 +21,21 @@ namespace SoulEditor
 
     public:
         std::shared_ptr<GuiWindow> OpenWindow(std::string name);
-
+        template<class T>
+        std::shared_ptr<T> OpenWindow(std::string name)
+        {
+            std::shared_ptr<GuiWindow> win= OpenWindow(name);
+            return std::dynamic_pointer_cast<T>(win);
+        }
+        void CloseWindow(std::shared_ptr<GuiWindow> window);
+        void CloseWindow(const std::string& name);
+        std::shared_ptr<GuiWindow> GetWindow(const std::string& name) const;
     private:
         bool initialized = false;
         std::vector<std::shared_ptr<GuiWindow>> m_windows;
-        std::unordered_map<std::string,std::shared_ptr<GuiWindow>> m_windowMap;
+    public:
+        void SwitchToMainEditor();
+        void SwitchToStartupScreen();
     };
 }
 

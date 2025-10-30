@@ -7,7 +7,7 @@ namespace SoulEditor
     {
     public:
         explicit StartupWindow()
-            : GuiWindow("Startup")
+            : GuiWindow("StartupWindow")
         {
         }
 

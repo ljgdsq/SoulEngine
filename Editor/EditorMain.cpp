@@ -4,6 +4,7 @@
 
 #include "GuiManager.h"
 #include "Input.h"
+#include "Project/ProjectManager.h"
 #include "Window/WindowSystem.h"
 
 class EditorApplication : public SoulEngine::ApplicationBase
@@ -15,13 +16,29 @@ public:
         m_window->SetTitle("SoulEditor");
         m_guiManager = std::make_unique<SoulEditor::GuiManager>();
         m_guiManager->Initialize(static_cast<GLFWwindow*>(m_window->GetNativeWindowHandle()));
+        SoulEditor::ProjectManager::GetInstance().SetOnProjectOpenedCallback([this]()
+        {
+            m_window->SetResizable(true);
+            m_window->SetSize(1280,720);
+            m_window->SetTitle("SoulEditor - "+SoulEditor::ProjectManager::GetInstance().GetCurrentProject()->GetProjectName() );
+            m_guiManager->SwitchToMainEditor();
+        });
+        SoulEditor::ProjectManager::GetInstance().SetOnProjectCreatedCallback([this]()
+        {
+            m_window->SetResizable(true);
+            m_window->SetSize(1280,720);
+            m_window->SetTitle("SoulEditor - "+SoulEditor::ProjectManager::GetInstance().GetCurrentProject()->GetProjectName() );
+            m_guiManager->SwitchToMainEditor();
+        });
+
+        m_guiManager->SwitchToStartupScreen();
         return true;
     }
     void Update(float deltaTime) override
     {
-        if (SoulEngine::Input::GetKeyDown(SoulEngine::KeyCode::A))
+        if (SoulEngine::Input::GetKeyDown(SoulEngine::KeyCode::Escape))
         {
-           
+           m_window->SetShouldClose(true);
         }
     }
     void Render() override

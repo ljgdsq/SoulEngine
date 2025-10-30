@@ -3,15 +3,15 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include "ContentBrowser.h"
 #include "Logger.h"
 #include "WindowFactory.h"
+#include "Project/ProjectManager.h"
 
 namespace SoulEditor
 {
-    
     bool GuiManager::Initialize(GLFWwindow* window)
     {
-
         if (initialized)
             return false;
     
@@ -30,8 +30,6 @@ namespace SoulEditor
         ImGui_ImplOpenGL3_Init("#version 330 core");
         initialized = true;
         SoulEngine::Logger::Log("GuiManager initialized successfully");
-
-        OpenWindow("StartupWindow");
         
         return true;
     }
@@ -98,9 +96,54 @@ namespace SoulEditor
 
     std::shared_ptr<GuiWindow> GuiManager::OpenWindow(std::string name)
     {
-        auto window =  WindowFactory::GetInstance().CreateWindow(name);
-        m_windows.push_back(window);
+        auto window = GetWindow(name);
+        if (window == nullptr)
+        {
+            window =  WindowFactory::GetInstance().CreateWindow(name);
+            window->OnInitialize();
+            m_windows.push_back(window);
+        }
+        window->SetVisible(true);
         return window;
+    }
+
+    void GuiManager::CloseWindow(std::shared_ptr<GuiWindow> window)
+    {
+        window->SetVisible(false);
+        m_windows.erase(std::remove(m_windows.begin(), m_windows.end(), window), m_windows.end());
+    }
+
+    void GuiManager::CloseWindow(const std::string& name)
+    {
+        auto window= GetWindow(name);
+        if (window != nullptr)
+        {
+            CloseWindow(window);
+        }
+    }
+
+    std::shared_ptr<GuiWindow> GuiManager::GetWindow(const std::string& name) const
+    {
+        for (auto window : m_windows)
+        {
+            if (window->GetName() == name)
+            {
+                return window;
+            }
+        }
+        return nullptr;
+    }
+
+    void GuiManager::SwitchToMainEditor()
+    {
+        CloseWindow("StartupWindow");
+        auto browser=OpenWindow<ContentBrowser>("ContentBrowser");
+        browser->SetRootPath(ProjectManager::GetInstance().GetCurrentProject()->GetAssetsPath());
+    }
+
+    void GuiManager::SwitchToStartupScreen()
+    {
+        OpenWindow("StartupWindow");
     }
 
     void GuiManager::Shutdown()

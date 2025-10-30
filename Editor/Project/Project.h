@@ -3,7 +3,7 @@
 #include <filesystem>
 #include "Define.h"
 
-namespace SoulEngine
+namespace SoulEditor
 {
     /**
      * @brief 简单的项目设置结构

@@ -53,12 +53,19 @@ namespace SoulEngine
         static std::filesystem::path GetEngineRootPath();
 
         // 获取引擎资源目录
-        static std::filesystem::path GetEngineAssetsPath();
+        static std::filesystem::path GetAssetsPath();
+
+        // 获取项目根目录
+        static std::filesystem::path GetProjectPath();
+
+        static void SetProjectPath(const std::filesystem::path &path);
     private:
         // 查找资源文件的实际路径
         static std::optional<std::filesystem::path> FindResourcePath(const std::string &path);
 
         // 存储搜索路径
         static std::vector<std::filesystem::path> searchPaths;
+
+        static std::filesystem::path projectPath;
     };
 } // namespace SoulEngine

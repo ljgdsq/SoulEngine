@@ -1,5 +1,5 @@
 ﻿#include "StartupWindow.h"
-
+#include "GuiManager.h"
 #include "ImGuiFileDialog.h"
 #include "Logger.h"
 #include "Project/Project.h"
@@ -10,6 +10,7 @@ namespace SoulEditor
     void SoulEditor::StartupWindow::OnInitialize()
     {
         GuiWindow::OnInitialize();
+        
     }
 
     void SoulEditor::StartupWindow::OnUpdate(float deltaTime)

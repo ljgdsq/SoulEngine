@@ -2,7 +2,8 @@
 #include <filesystem>
 #include "nlohmann/json.hpp"
 #include "Core/EngineFileIO.h"
-namespace SoulEngine
+using SoulEngine::EngineFileIO;
+namespace SoulEditor
 {
     bool Project::CreateNewProject(const std::string &path, const std::string &name)
     {

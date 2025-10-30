@@ -7,8 +7,8 @@
 
 namespace SoulEngine
 {
-    std::vector<std::filesystem::path> EngineFileIO::searchPaths{std::filesystem::current_path() / "Resources", std::filesystem::current_path()};
-
+    std::vector<std::filesystem::path> EngineFileIO::searchPaths{};
+    std::filesystem::path EngineFileIO::projectPath = std::filesystem::current_path();
     std::string EngineFileIO::LoadText(const std::string &path)
     {
         auto fullPath = FindResourcePath(path);
@@ -158,9 +158,21 @@ namespace SoulEngine
         return rootPath;
     }
 
-    std::filesystem::path EngineFileIO::GetEngineAssetsPath()
+    std::filesystem::path EngineFileIO::GetAssetsPath()
     {
-        static std::filesystem::path assetsPath = GetEngineRootPath() / "Resources";
+        static std::filesystem::path assetsPath = GetProjectPath() / "Assets";
         return assetsPath;
     }
+
+    std::filesystem::path EngineFileIO::GetProjectPath()
+    {
+        return projectPath;
+    }
+
+    void EngineFileIO::SetProjectPath(const std::filesystem::path& path)
+    {
+        projectPath = path;
+        AddSearchPath((path / "Assets").string());
+    }
+    
 } // namespace SoulEngine
