@@ -2,6 +2,7 @@
 
 #include "Renderer/Renderer.h"
 #include <memory>
+#include <deque>
 
 
 namespace SoulEngine
@@ -32,5 +33,8 @@ namespace SoulEngine
 
         std::shared_ptr<Gfx::IDevice> device_;
         std::shared_ptr<Gfx::IContext> context_;
+
+        std::deque<GLsync> frameFences_;
+        bool forceSync_ = false;
     };
 } // namespace SoulEngine

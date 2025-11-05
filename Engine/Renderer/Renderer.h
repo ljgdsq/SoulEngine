@@ -47,6 +47,16 @@ namespace SoulEngine {
         // Optional: expose Gfx device/context if renderer provides them
         virtual Gfx::IDevice* GetGfxDevice() { return nullptr; }
         virtual Gfx::IContext* GetGfxContext() { return nullptr; }
+
+
+        void SetFlushGpu(bool flush) { flushGpu = flush; }
+        bool GetFlushGpu() const { return flushGpu; }
+        void SetMaxFramesInFlight(int maxFrames);
+        int GetMaxFramesInFlight() const { return maxFramesInFlight; }
+
+    protected:
+        bool flushGpu{true};
+        int maxFramesInFlight{1};
     };
-    
+ 
 } // namespace SoulEngine
