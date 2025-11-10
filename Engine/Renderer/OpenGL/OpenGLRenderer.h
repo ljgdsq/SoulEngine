@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Renderer/Renderer.h"
+#include <glad/glad.h>
 #include <memory>
 #include <deque>
 

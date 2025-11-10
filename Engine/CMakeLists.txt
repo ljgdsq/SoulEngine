@@ -15,8 +15,6 @@ file(GLOB_RECURSE ENGINE_SOURCES
     "Renderer/*.h"
     "Component/*.cpp" 
     "Component/*.h"
-    "Renderer/OpenGL/*.cpp"
-    "Renderer/OpenGL/*.h"
     "Physics/*.cpp"
     "Physics/*.h"
     "Audio/*.cpp"
@@ -37,7 +35,6 @@ file(GLOB_RECURSE ENGINE_HEADERS
     "Core/*.inl"
     "Renderer/*.h"
     "Renderer/*.hpp" 
-    "Renderer/OpenGL/*.h"
     "Physics/*.h"
     "Physics/*.hpp"
     "Audio/*.h"
@@ -47,6 +44,13 @@ file(GLOB_RECURSE ENGINE_HEADERS
     "Window/*.h"
     "Window/*.hpp"
 )
+
+
+if (SOULENGINE_WITH_OPENGL)
+    file(GLOB_RECURSE ENGINE_GL_SOURCES "Renderer/OpenGL/*.cpp" "Renderer/OpenGL/*.h")
+    list(APPEND ENGINE_SOURCES ${ENGINE_GL_SOURCES})
+    list(APPEND ENGINE_HEADERS ${ENGINE_GL_SOURCES})
+endif()
 
 # 创建SoulEngine静态库
 add_library(SoulEngine STATIC ${ENGINE_SOURCES} ${ENGINE_HEADERS})
