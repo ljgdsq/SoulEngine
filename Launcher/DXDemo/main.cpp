@@ -14,6 +14,11 @@ ID3D11DeviceContext *g_immediateContext = nullptr;
 ID3D11RenderTargetView *g_renderTargetView = nullptr;
 IDXGISwapChain *g_swapChain = nullptr;
 
+ID3D11VertexShader* g_vertexShader = nullptr;
+ID3D11PixelShader* g_pixelShader = nullptr;
+
+
+bool SetupShader();
 void CleanUp();
 bool Display(float delta);
 
@@ -108,6 +113,10 @@ void TestMatrixUtil();
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 
+    char buf[MAX_PATH];
+GetCurrentDirectoryA(MAX_PATH, buf);
+spdlog::info("Current directory: {}", buf);
+
     // 这些参数不使用
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -142,6 +151,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!InitD3d(hInstance, 800, 600, &g_renderTargetView, &g_immediateContext, &g_swapChain, &g_device))
     {
         spdlog::error("Failed to initialize D3D11");
+        return -1;
+    }
+
+    if (!SetupShader())
+    {
+        spdlog::error("Failed to setup shaders");
         return -1;
     }
 
@@ -232,9 +247,16 @@ bool InitD3d(HINSTANCE hInstance, int w, int h, ID3D11RenderTargetView **targetV
         D3D_FEATURE_LEVEL_10_0,
     };
 
+UINT createDeviceFlags = 0;
+// vscode 会卡死
+#if defined(_DEBUG)
+    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+    spdlog::info("D3D11_CREATE_DEVICE_DEBUG flag set");
+    #endif
+
     UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 
-    HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, &sd, swapChain, device, NULL, immediateContext);
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, &sd, swapChain, device, NULL, immediateContext);
     if (FAILED(hr))
     {
         MessageBoxA(MainWindowHandle, "D3D11CreateDeviceAndSwapChain Failed!", "Error", MB_OK);
@@ -287,16 +309,125 @@ void CleanUp()
         g_swapChain->Release();
     if (g_device)
         g_device->Release();
+
+    if (g_vertexShader)
+        g_vertexShader->Release();
+    if (g_pixelShader)
+        g_pixelShader->Release();
 }
 
 bool Display(float delta)
 {
     if (g_device)
     {
-        float ClearColor[4] = {0.2f, 0.4f, 0.3f, 1};
+        float ClearColor[4] = {0.02f, 0.124f, 0.3f, 1.0f};
         g_immediateContext->ClearRenderTargetView(g_renderTargetView, ClearColor);
+
+        g_immediateContext->VSSetShader(g_vertexShader, nullptr, 0);
+        g_immediateContext->PSSetShader(g_pixelShader, nullptr, 0);
+
+        g_immediateContext->Draw(3, 0);
+
 
         g_swapChain->Present(0, 0);
     }
     return true;
+}
+
+struct Vertex{
+    DirectX::XMFLOAT3 position;
+};
+
+
+bool SetupShader(){
+
+    DWORD shaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
+
+    ID3DBlob* vsBlob = nullptr;
+
+    HRESULT hr = D3DCompileFromFile(L"Triangle.hlsl",nullptr,nullptr,"VSMain","vs_5_0",shaderFlags,0,&vsBlob,nullptr);
+    if(FAILED(hr)){
+        spdlog::error("Failed to compile vertex shader");
+        return false;
+    }
+
+    hr = g_device->CreateVertexShader(vsBlob->GetBufferPointer(),vsBlob->GetBufferSize(),nullptr,&g_vertexShader);
+    if(FAILED(hr)){
+        spdlog::error("Failed to create vertex shader");
+        vsBlob->Release();
+        return false;
+    }
+
+    hr = D3DCompileFromFile(L"Triangle.hlsl",nullptr,nullptr,"PSMain","ps_5_0",shaderFlags,0,&vsBlob,nullptr);
+    if(FAILED(hr)){
+        spdlog::error("Failed to compile pixel shader");
+        return false;
+    }
+    hr = g_device->CreatePixelShader(vsBlob->GetBufferPointer(),vsBlob->GetBufferSize(),nullptr,&g_pixelShader);
+    if(FAILED(hr)){
+        spdlog::error("Failed to create pixel shader");
+        vsBlob->Release();
+        return false;
+    }
+
+
+    D3D11_INPUT_ELEMENT_DESC layout[] ={
+        {
+            "POSITION",
+            0,
+            DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            0,
+            D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,
+            0
+        }
+    };
+
+    UINT numElements = ARRAYSIZE(layout);
+    ID3D11InputLayout *inputLayout = nullptr;
+
+    hr = g_device->CreateInputLayout(layout,numElements,vsBlob->GetBufferPointer(),vsBlob->GetBufferSize(),&inputLayout);
+    if(FAILED(hr)){
+        spdlog::error("Failed to create input layout");
+        vsBlob->Release();
+        return false;
+    }
+
+    g_immediateContext->IASetInputLayout(inputLayout);
+
+    inputLayout->Release();
+    vsBlob->Release();
+
+    Vertex vertices[] = {
+        {DirectX::XMFLOAT3(0.0f,0.5f,0.0f)},
+        {DirectX::XMFLOAT3(0.5f,-0.5f,0.0f)},
+        {DirectX::XMFLOAT3(-0.5f,-0.5f,0.0f)}
+    };
+
+    D3D11_BUFFER_DESC bd;
+    ZeroMemory(&bd,sizeof(bd));
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(Vertex) * 3;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+        D3D11_SUBRESOURCE_DATA initData;
+        ZeroMemory(&initData,sizeof(initData));
+        initData.pSysMem = vertices;
+
+    ID3D11Buffer *vertexBuffer = nullptr;
+
+    hr=g_device->CreateBuffer(&bd,&initData,&vertexBuffer);
+    if(FAILED(hr)){
+        spdlog::error("Failed to create vertex buffer");
+        return false;
+    }
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+
+    g_immediateContext->IASetVertexBuffers(0,1,&vertexBuffer,&stride,&offset);
+    g_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    return true;
+
 }

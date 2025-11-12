@@ -27,3 +27,14 @@ target_link_libraries(DXDemo PRIVATE d3d11.lib dxgi.lib dxguid.lib D3DCompiler.l
 
 # 设置IDE中的文件夹
 set_target_properties(DXDemo PROPERTIES FOLDER "Launcher/Examples")
+
+
+
+set(DXDEMO_SHADER ${CMAKE_SOURCE_DIR}/Launcher/DXDemo/Triangle.hlsl)
+
+add_custom_command(
+    TARGET DXDemo POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${DXDEMO_SHADER}
+            $<TARGET_FILE_DIR:DXDemo>
+)
