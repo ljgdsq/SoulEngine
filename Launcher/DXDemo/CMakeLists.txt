@@ -38,3 +38,14 @@ add_custom_command(
             ${DXDEMO_SHADER}
             $<TARGET_FILE_DIR:DXDemo>
 )
+
+
+target_include_directories(DXDemo PRIVATE ${CMAKE_BINARY_DIR})
+
+set(TARGET_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/target_path.h.in
+    ${CMAKE_BINARY_DIR}/target_path.h
+    @ONLY
+)

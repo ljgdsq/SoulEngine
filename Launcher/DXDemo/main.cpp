@@ -110,12 +110,13 @@ bool InitWindowsApp(HINSTANCE hInstance, int nShowCmd)
 }
 void TestMatrixUtil();
 
+#include "target_path.h"
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-
+    SetCurrentDirectoryA(TARGET_OUTPUT_PATH);
     char buf[MAX_PATH];
 GetCurrentDirectoryA(MAX_PATH, buf);
-spdlog::info("Current directory: {}", buf);
 
     // 这些参数不使用
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -135,6 +136,11 @@ spdlog::info("Current directory: {}", buf);
 
     std::cout << "Hello from SoulEngine DXDemo!" << std::endl;
 
+
+    spdlog::info("Current directory: {}", buf);
+
+
+
     // Here you can add your engine initialization code
     // SoulEngine::Initialize();
 
@@ -147,6 +153,17 @@ spdlog::info("Current directory: {}", buf);
         spdlog::error("Failed to initialize Windows application");
         return -1;
     }
+
+    // flush
+    fflush(stdout);
+    fflush(stderr);
+
+
+    spdlog::flush_on(spdlog::level::info);
+
+    // flush spdlog
+    spdlog::default_logger()->flush();
+
 
     if (!InitD3d(hInstance, 800, 600, &g_renderTargetView, &g_immediateContext, &g_swapChain, &g_device))
     {
