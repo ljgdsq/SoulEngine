@@ -60,6 +60,22 @@ inline std::wstring AnsiToWString(const std::string& str)
     return std::wstring(buffer);
 }
 
+// wstring 转 string（UTF-8）
+inline std::string WStringToString(const std::wstring& wstr) {
+	if (wstr.empty()) return {};
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+	std::string strTo(size_needed, 0);
+	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), &strTo[0], size_needed, nullptr, nullptr);
+	return strTo;
+}
+
+inline const char* WStringToAnsi(const std::wstring& wstr)
+{
+	static char buffer[512];
+	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), -1, buffer, 512, NULL, NULL);
+	return buffer;
+}
+
 /*
 #if defined(_DEBUG)
     #ifndef Assert

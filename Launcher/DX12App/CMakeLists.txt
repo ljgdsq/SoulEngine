@@ -1,7 +1,15 @@
 # DXDemo - 基础示例
 cmake_minimum_required(VERSION 3.14)
 
-add_executable(DX12App WIN32 main.cpp)
+add_executable(DX12App WIN32 main.cpp 
+    d3dUtil.cpp
+    D3DApp.cpp
+    Camera.cpp
+    DDSTextureLoader.cpp
+    GameTimer.cpp
+    GeometryGenerator.cpp
+    MathHelper.cpp
+)
 
 set_property(TARGET DX12App PROPERTY CXX_STANDARD 17)
 
@@ -31,3 +39,6 @@ configure_file(
     ${CMAKE_BINARY_DIR}/target_path.h
     @ONLY
 )
+
+add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
+target_compile_definitions(DX12App PRIVATE UNICODE _UNICODE)
