@@ -112,6 +112,10 @@ void TestMatrixUtil();
 
 #include "target_path.h"
 
+void LogAdaptors();
+void LogOutputs(IDXGIAdapter* adapter);
+void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
     SetCurrentDirectoryA(TARGET_OUTPUT_PATH);
@@ -134,16 +138,18 @@ GetCurrentDirectoryA(MAX_PATH, buf);
     spdlog::set_level(spdlog::level::debug);
     spdlog::info("Starting SoulEngine DXDemo (WinMain)");
 
-    std::cout << "Hello from SoulEngine DXDemo!" << std::endl;
-
-
     spdlog::info("Current directory: {}", buf);
 
-
-
+    auto verifyResult = DirectX::XMVerifyCPUSupport();
+    if (!verifyResult)
+    {
+        spdlog::error("DirectX Math CPU support verification failed: {}", static_cast<int>(verifyResult));
+    }else{
+        spdlog::info("DirectX Math CPU support verified successfully");
+    }
     // Here you can add your engine initialization code
     // SoulEngine::Initialize();
-
+    LogAdaptors();
     // Main loop example
     bool running = true;
     int frameCount = 0;
@@ -270,7 +276,7 @@ UINT createDeviceFlags = 0;
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
     spdlog::info("D3D11_CREATE_DEVICE_DEBUG flag set");
     #endif
-
+    
     UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 
     HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, &sd, swapChain, device, NULL, immediateContext);
@@ -447,4 +453,75 @@ bool SetupShader(){
 
     return true;
 
+}
+
+#include <vector>
+
+void LogAdaptors()
+{
+    UINT i=0;
+    IDXGIAdapter *adapter = nullptr;
+    std::vector<IDXGIAdapter*> adapters;
+    IDXGIFactory *factory = nullptr;
+    HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
+    if(FAILED(hr)){
+        spdlog::error("Failed to create DXGI Factory");
+        return;
+    }
+
+    while(factory->EnumAdapters(i,&adapter) != DXGI_ERROR_NOT_FOUND){
+        DXGI_ADAPTER_DESC desc;
+        adapter->GetDesc(&desc);
+
+        std::wstring wdesc(desc.Description);
+        std::string sdesc(wdesc.begin(),wdesc.end());
+
+        spdlog::info("Adapter {}: {}",i,sdesc);
+        adapters.push_back(adapter);
+        i++;
+
+        LogOutputs(adapter);
+
+        spdlog::info("--------------------");
+    }
+
+
+    for(auto& adp : adapters){
+        adp->Release();
+    }
+    factory->Release();
+
+}
+
+void LogOutputs(IDXGIAdapter* adapter){
+
+    UINT i = 0;
+    IDXGIOutput *output = nullptr;
+    while(adapter->EnumOutputs(i,&output) != DXGI_ERROR_NOT_FOUND){
+        DXGI_OUTPUT_DESC desc;
+        output->GetDesc(&desc);
+
+        std::wstring wdesc(desc.DeviceName);
+        std::string sdesc(wdesc.begin(),wdesc.end());
+
+        spdlog::info("Output {}: {}",i,sdesc);
+        
+        LogOutputDisplayModes(output, DXGI_FORMAT_R8G8B8A8_UNORM);
+        output->Release();
+        i++;
+    }
+
+}
+
+void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format){
+    UINT count = 0;
+    UINT flags = 0;
+
+    output->GetDisplayModeList(format,flags,&count,nullptr);
+    std::vector<DXGI_MODE_DESC> modeDescs(count);
+    output->GetDisplayModeList(format,flags,&count,modeDescs.data());
+
+    for(const auto& mode : modeDescs){
+        spdlog::info("Mode: {}x{} @ {}/{} Hz, Format: {}",mode.Width,mode.Height,mode.RefreshRate.Numerator,mode.RefreshRate.Denominator,static_cast<int>(mode.Format));
+    }
 }

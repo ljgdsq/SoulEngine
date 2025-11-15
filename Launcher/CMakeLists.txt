@@ -8,6 +8,8 @@ set(CMAKE_FOLDER "Launcher")
 
 if(WIN32)
     add_subdirectory(DXDemo)
+    add_subdirectory(DX12Demo)
+    add_subdirectory(DX12App)
 endif(WIN32)
 add_subdirectory(OpenGLDemo)
 
