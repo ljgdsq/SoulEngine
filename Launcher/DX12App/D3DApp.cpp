@@ -5,7 +5,7 @@
 #include "Log/Logger.h"
 using std::wstring;
 using Microsoft::WRL::ComPtr;
-
+#pragma warning(disable:4355)
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     // Forward hwnd on because we can get messages (e.g., WM_CREATE)

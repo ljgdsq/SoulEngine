@@ -11,6 +11,10 @@ add_executable(DX12App WIN32 main.cpp
     MathHelper.cpp
 )
 
+if(MSVC)
+    target_compile_options(DX12App PRIVATE /wd4355)
+endif()
+
 set_property(TARGET DX12App PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(DX12App PRIVATE SoulEngine)
