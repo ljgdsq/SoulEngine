@@ -30,6 +30,22 @@ protected:
     void Draw(const GameTimer& gt) override;
 };
 
+struct Vertex{
+    DirectX::XMFLOAT3 Pos;
+    DirectX::XMFLOAT4 Color;
+};
+
+struct Vertex2{
+    DirectX::XMFLOAT3 Pos;
+    DirectX::XMFLOAT3 Normal;
+    DirectX::XMFLOAT2 Tex0;
+    DirectX::XMFLOAT2 Tex1;
+
+};
+
+
+
+
 void MyApp::Draw(const GameTimer& gt)
 {
     ThrowIfFailed(mDirectCmdListAlloc->Reset());
@@ -121,11 +137,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
 
-    MyApp app(hInstance);
-    if (app.Initialize())
+    try
     {
-        return app.Run();
+        MyApp app(hInstance);
+        if (app.Initialize())
+        {
+            return app.Run();
+        }
+        
     }
+    catch(const DxException& e)
+    {
+        MessageBoxW(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
+    }
+    catch(const std::exception& e)
+    {
+        MessageBoxA(nullptr, e.what(), "Exception", MB_OK);
+    }
+    
+
 
      spdlog::info("DX12App finished frames");
 

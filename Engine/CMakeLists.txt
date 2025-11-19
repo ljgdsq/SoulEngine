@@ -45,10 +45,9 @@ file(GLOB_RECURSE ENGINE_HEADERS
     "Window/*.hpp"
 )
 
-list(FILTER ENGINE_SOURCES EXCLUDE REGEX "Window/Platform/GLFWWindow\\.cpp$")
-list(FILTER ENGINE_SOURCES EXCLUDE REGEX "Window/Platform/GLFWWindow\\.h$")
-list(FILTER ENGINE_HEADERS EXCLUDE REGEX "Window/Platform/GLFWWindow\\.h$")
-
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "Window/Platform/.*\\.cpp$")
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "Window/Platform/.*\\.h$")
+list(FILTER ENGINE_HEADERS EXCLUDE REGEX "Window/Platform/.*\\.h$")
 if (SOULENGINE_WITH_OPENGL)
     file(GLOB_RECURSE ENGINE_GL_SOURCES "Renderer/OpenGL/*.cpp" "Renderer/OpenGL/*.h")
     list(APPEND ENGINE_SOURCES ${ENGINE_GL_SOURCES})
