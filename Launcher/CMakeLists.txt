@@ -7,10 +7,8 @@ set(CMAKE_FOLDER "Launcher")
 # 添加各个样例子目录
 
 if(WIN32)
-    # add_subdirectory(DXDemo)
-    # add_subdirectory(DX12Demo)
-    # add_subdirectory(DX12App)
-    add_subdirectory(DX12BoxApp)
+    # add_subdirectory(DX12BoxApp)
+    add_subdirectory(DX12ShapeApp)
 endif(WIN32)
 add_subdirectory(OpenGLDemo)
 
