@@ -8,7 +8,8 @@ set(CMAKE_FOLDER "Launcher")
 
 if(WIN32)
     # add_subdirectory(DX12BoxApp)
-    add_subdirectory(DX12ShapeApp)
+    # add_subdirectory(DX12ShapeApp)
+    add_subdirectory(DX12Wave)
 endif(WIN32)
 add_subdirectory(OpenGLDemo)
 
