@@ -43,7 +43,7 @@ add_custom_command(
 target_include_directories(DXDemo PRIVATE ${CMAKE_BINARY_DIR})
 
 set(TARGET_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-
+add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 configure_file(
     ${CMAKE_SOURCE_DIR}/cmake/target_path.h.in
     ${CMAKE_BINARY_DIR}/target_path.h
