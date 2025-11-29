@@ -11,10 +11,21 @@ struct VertexOut
     float4 color: COLOR;
 };
 
+
+cbuffer cbTransform : register(b0)
+{
+    matrix g_world;
+    matrix g_view;
+    matrix g_proj;
+}
+
+
 VertexOut VS(VertexIn vIn)
 {
     VertexOut vOut;
-    vOut.pos = float4(vIn.pos, 1.0);
+    vOut.pos = mul(float4(vIn.pos, 1.0),g_world);
+    vOut.pos = mul(vOut.pos, g_view);
+    vOut.pos = mul(vOut.pos, g_proj);
     vOut.color = vIn.color;
     return vOut;
 }

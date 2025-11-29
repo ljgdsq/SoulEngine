@@ -5,6 +5,16 @@
 #include "d3dUtil.h"
 #include "DXTrace.h"
 
+#pragma warning(disable: 6031)
+
+extern "C"
+{
+    // 在具有多显卡的硬件设备中，优先使用NVIDIA或AMD的显卡运行
+    // 需要在.exe中使用
+    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 0x00000001;
+}
+
 namespace
 {
     D3DApp* g_pd3dApp = nullptr;
@@ -327,6 +337,12 @@ void D3DApp::OnResize()
     m_ScreenViewport.MaxDepth = 1.0f;
 
     m_pd3dImmediateContext->RSSetViewports(1, &m_ScreenViewport);
+
+    // 设置调试对象名
+    D3D11SetDebugObjectName(m_pDepthStencilBuffer.Get(), "DepthStencilBuffer");
+    D3D11SetDebugObjectName(m_pDepthStencilView.Get(), "DepthStencilView");
+    D3D11SetDebugObjectName(m_pRenderTargetView.Get(), "BackBufferRTV[0]");
+    
 }
 
 
@@ -524,6 +540,14 @@ bool D3DApp::InitDirect3D()
 
     return true;
 }
+
+
+
+
+
+
+
+
 
 void D3DApp::CalculateFrameStats()
 {
