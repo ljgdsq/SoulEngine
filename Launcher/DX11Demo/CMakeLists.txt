@@ -36,6 +36,14 @@ endif()
 
 target_link_libraries(DX11Demo PRIVATE d3d11.lib dxgi.lib dxguid.lib D3DCompiler.lib winmm.lib d2d1.lib dwrite.lib)
 
+file(GLOB HLSL_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/*.hlsl)
+
+target_sources(DX11Demo PRIVATE ${HLSL_FILES})
+
+set_source_files_properties(${HLSL_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+source_group("Shaders" FILES ${HLSL_FILES})
+
+
 # 设置IDE中的文件夹
 set_target_properties(DX11Demo PROPERTIES FOLDER "Launcher/Examples")
 

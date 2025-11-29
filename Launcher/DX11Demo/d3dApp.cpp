@@ -525,14 +525,6 @@ bool D3DApp::InitDirect3D()
     return true;
 }
 
-
-
-
-
-
-
-
-
 void D3DApp::CalculateFrameStats()
 {
     // 该代码计算每秒帧速，并计算每一帧渲染需要的时间，显示在窗口标题
