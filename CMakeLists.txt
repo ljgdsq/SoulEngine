@@ -24,6 +24,7 @@ set(CMAKE_FOLDER "thirdlib") # 这会影响所有接下来引入的目标
 # 图形后端可选项（默认均关闭以保持最小依赖）
 option(SOULENGINE_WITH_OPENGL "Enable OpenGL backend" OFF)
 option(SOULENGINE_WITH_DX12   "Enable DirectX 12 backend" ON)
+option(SOULENGINE_WITH_DX11   "Enable DirectX 11 backend" ON)
 option(SOULENGINE_WITH_VULKAN "Enable Vulkan backend" OFF)
 
 # 当启用 OpenGL 后端时，纳入独立依赖模块（优先 find_package，必要时 FetchContent）
@@ -35,6 +36,11 @@ endif()
 if (SOULENGINE_WITH_DX12)
   message(STATUS "SoulEngine: DirectX 12 backend ENABLED")
   include(${CMAKE_SOURCE_DIR}/cmake/backends/DX12Deps.cmake)
+endif()
+
+if (SOULENGINE_WITH_DX11)
+  message(STATUS "SoulEngine: DirectX 11 backend ENABLED")
+  include(${CMAKE_SOURCE_DIR}/cmake/backends/DX11Deps.cmake)
 endif()
 
 message(STATUS "SoulEngine load cmake")

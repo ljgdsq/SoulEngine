@@ -7,7 +7,8 @@ set(CMAKE_FOLDER "Launcher")
 # 添加各个样例子目录
 
 if(WIN32)
-    add_subdirectory(DX11Demo)
+    # add_subdirectory(DX11Demo)
+    add_subdirectory(DX11Imgui)
     # add_subdirectory(DX12ShapeApp)
     # add_subdirectory(DX12Wave)
     # add_subdirectory(DX12WaveLighting)
