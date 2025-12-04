@@ -77,14 +77,4 @@ protected:
     int m_ClientWidth;            // 客户区宽度
     int m_ClientHeight;           // 客户区高度
 
-
-protected:
-    ComPtr<ID2D1Factory> m_pD2DFactory;               // Direct2D工厂
-    ComPtr<IDWriteFactory> m_pdwriteFactory;               // WIC工厂
-    virtual bool InitDirect2D();                       // Direct2D初始化
-
-    ComPtr<ID2D1RenderTarget> m_pd2dRenderTarget;     // Direct2D渲染目标
-    ComPtr<ID2D1SolidColorBrush> m_pColorBrush;
-    ComPtr<IDWriteTextFormat> m_pTextFormat;                 // 文本格式
-    
 };

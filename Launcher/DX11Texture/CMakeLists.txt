@@ -36,12 +36,15 @@ endif()
 
 target_link_libraries(DX11Texture PRIVATE d3d11.lib dxgi.lib dxguid.lib D3DCompiler.lib winmm.lib d2d1.lib dwrite.lib)
 
-file(GLOB HLSL_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/*.hlsl ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/*.hlsli)
+file(GLOB HLSL_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/*.hlsl)
 
-target_sources(DX11Texture PRIVATE ${HLSL_FILES})
+file(GLOB HLSLI_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/*.hlsli)
+
+target_sources(DX11Texture PRIVATE ${HLSL_FILES} ${HLSLI_FILES})
 
 set_source_files_properties(${HLSL_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
-source_group("Shaders" FILES ${HLSL_FILES})
+set_source_files_properties(${HLSLI_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+source_group("Shaders" FILES ${HLSL_FILES} ${HLSLI_FILES})
 
 
 # 设置IDE中的文件夹

@@ -140,8 +140,6 @@ bool D3DApp::Init()
     if (!InitMainWindow())
         return false;
 
-    if (!InitDirect2D())
-        return false;
     if (!InitDirect3D())
         return false;
 
@@ -606,12 +604,4 @@ void D3DApp::CalculateFrameStats()
     }
 }
 
-bool D3DApp::InitDirect2D()
-{
-    HR(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, m_pD2DFactory.GetAddressOf()));
-
-    HR(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),reinterpret_cast<IUnknown**>(m_pdwriteFactory.GetAddressOf())));
-    
-    return true;
-}
 

@@ -3,9 +3,11 @@
 
 #include "d3dApp.h"
 #include "d3dUtil.h"
+#include "DDSTextureLoader11.h"
 #include "DXTrace.h"
 #include "LightHelper.h"
 #include "Geometry.h"
+#include "WICTextureLoader11.h"
 using namespace DirectX;
 struct VSConstantBuffer
 {
@@ -17,10 +19,14 @@ struct VSConstantBuffer
 
 struct PSConstantBuffer
 {
-    DirectionalLight dirLight;
-    PointLight pointLight;
-    SpotLight spotLight;
+    DirectionalLight dirLight[10];
+    PointLight pointLight[10];
+    SpotLight spotLight[10];
     Material material;
+    int numDirLight;
+    int numPointLight;
+    int numSpotLight;
+    float pad;		// 打包保证16字节对齐
     DirectX::XMFLOAT4 eyePos;
 };
 namespace
@@ -32,7 +38,7 @@ namespace
     float phi = 0.0f, theta = 0.0f;
     float fov = XM_PIDIV2;
 }
-
+enum class ShowMode { WoodCrate, FireAnim };
 class GameApp : public D3DApp
 {
 public:
@@ -47,15 +53,24 @@ public:
     bool InitResources();
     bool InitShaders();
 
-    bool ResetMesh(const Geometry::MeshData<VertexPosNormalColor> &meshData);
-    ComPtr<ID3D11InputLayout> m_pVertexLayout;  // 顶点输入布局
+    template<class VertexType>
+    bool ResetMesh(const Geometry::MeshData<VertexType> &meshData);
+    ComPtr<ID3D11InputLayout> m_pVertexLayout2D;  // 顶点输入布局
+    ComPtr<ID3D11InputLayout> m_pVertexLayout3D;  // 顶点输入布局
     ComPtr<ID3D11Buffer> m_pVertexBuffer;       // 顶点缓冲区
     ComPtr<ID3D11Buffer> m_pIndexBuffer;        // 索引缓冲区
     ComPtr<ID3D11Buffer> m_pConstantBuffers[2]; // 常量缓冲区
     UINT m_IndexCount;                          // 绘制物体的索引数组大小
+    int m_CurrFrame;	
+    ShowMode m_CurrMode = ShowMode::WoodCrate;		
+    ComPtr<ID3D11ShaderResourceView> m_pWoodCrate;
+    std::vector<ComPtr<ID3D11ShaderResourceView>> m_pFireAnims; // 火焰纹理集
+    ComPtr<ID3D11SamplerState> m_pSamplerState;
 
-    ComPtr<ID3D11VertexShader> m_pVertexShader; // 顶点着色器
-    ComPtr<ID3D11PixelShader> m_pPixelShader;   // 像素着色器
+    ComPtr<ID3D11VertexShader> m_pVertexShader2D; // 顶点着色器
+    ComPtr<ID3D11VertexShader> m_pVertexShader3D; // 顶点着色器
+    ComPtr<ID3D11PixelShader> m_pPixelShader2D;   // 像素着色器
+    ComPtr<ID3D11PixelShader> m_pPixelShader3D;   // 像素着色器
     VSConstantBuffer m_VSConstantBuffer;        // 用于修改用于VS的GPU常量缓冲区的变量
     PSConstantBuffer m_PSConstantBuffer;        // 用于修改用于PS的GPU常量缓冲区的变量
 
@@ -99,153 +114,83 @@ bool GameApp::Init()
 
 void GameApp::OnResize()
 {
-
-
-    assert(m_pD2DFactory);
-    assert(m_pdwriteFactory);
-    m_pColorBrush.Reset();
-    m_pd2dRenderTarget.Reset();
-    
-
     D3DApp::OnResize();
-
-    ComPtr<IDXGISurface> surface;
-    HR(m_pSwapChain->GetBuffer(0, __uuidof(IDXGISurface), reinterpret_cast<void**>(surface.GetAddressOf())));
-    // 创建Direct2D渲染目标
-    D2D1_RENDER_TARGET_PROPERTIES poops=D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,D2D1_ALPHA_MODE_PREMULTIPLIED));
-    HRESULT hr= m_pD2DFactory->CreateDxgiSurfaceRenderTarget(surface.Get(),poops,m_pd2dRenderTarget.GetAddressOf());
-    surface.Reset();
-
-    if (hr==E_NOINTERFACE)
-    {
-        OutputDebugString(L"\n警告：Direct2D与Direct3D互操作性功能受限，你将无法看到文本信息。现提供下述可选方法：\n"
-     "1. 对于Win7系统，需要更新至Win7 SP1，并安装KB2670838补丁以支持Direct2D显示。\n"
-     "2. 自行完成Direct3D 10.1与Direct2D的交互。详情参阅："
-     "https://docs.microsoft.com/zh-cn/windows/desktop/Direct2D/direct2d-and-direct3d-interoperation-overview""\n"
-     "3. 使用别的字体库，比如FreeType。\n\n");
-    }else if (hr == S_OK)
-    {
-        // 创建一个白色画笔
-        HR(m_pd2dRenderTarget->CreateSolidColorBrush(
-            D2D1::ColorF(D2D1::ColorF::White), m_pColorBrush.GetAddressOf()));
-
-        m_pdwriteFactory->CreateTextFormat(L"宋体",
-                                           nullptr,
-                                           DWRITE_FONT_WEIGHT_NORMAL,
-                                           DWRITE_FONT_STYLE_NORMAL,
-                                           DWRITE_FONT_STRETCH_NORMAL,
-                                           20, L"zh-cn", m_pTextFormat.GetAddressOf());
-    }
-
-    
 }
 
 void GameApp::UpdateScene(float dt)
 {
-    phi += 0.3f * dt, theta += 0.37f * dt;
-    XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
-    m_VSConstantBuffer.world = XMMatrixTranspose(W);
-    m_VSConstantBuffer.worldInvTranspose = XMMatrixTranspose(InverseTranspose(W));
-
-    if (ImGui::Begin("Lighting"))
+    if (ImGui::Begin("Texture Mapping"))
     {
-        static int curr_mesh_item = 0;
-        const char* mesh_strs[] = {
+        static int curr_mode_item = static_cast<int>(m_CurrMode);
+        const char* mode_strs[] = {
             "Box",
-            "Sphere",
-            "Cylinder",
-            "Cone"
+            "Fire Anim"
         };
-        if (ImGui::Combo("Mesh", &curr_mesh_item, mesh_strs, ARRAYSIZE(mesh_strs)))
+        if (ImGui::Combo("Mode", &curr_mode_item, mode_strs, ARRAYSIZE(mode_strs)))
         {
-            Geometry::MeshData<VertexPosNormalColor> meshData;
-            switch (curr_mesh_item)
+            if (curr_mode_item == 0)
             {
-            case 0: meshData = Geometry::CreateBox<VertexPosNormalColor>(); break;
-            case 1: meshData = Geometry::CreateSphere<VertexPosNormalColor>(); break;
-            case 2: meshData = Geometry::CreateCylinder<VertexPosNormalColor>(); break;
-            case 3: meshData = Geometry::CreateCone<VertexPosNormalColor>(); break;
+                // 播放木箱动画
+                m_CurrMode = ShowMode::WoodCrate;
+                m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout3D.Get());
+                auto meshData = Geometry::CreateBox();
+                ResetMesh(meshData);
+                m_pd3dImmediateContext->VSSetShader(m_pVertexShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pWoodCrate.GetAddressOf());
             }
-            ResetMesh(meshData);
-        }
-        bool mat_changed = false;
-        ImGui::Text("Material");
-        ImGui::PushID(3);
-        ImGui::ColorEdit3("Ambient", &m_PSConstantBuffer.material.ambient.x);
-        ImGui::ColorEdit3("Diffuse", &m_PSConstantBuffer.material.diffuse.x);
-        ImGui::ColorEdit3("Specular", &m_PSConstantBuffer.material.specular.x);
-        ImGui::PopID();
-
-        static int curr_light_item = 0;
-        static const char* light_modes[] = {
-            "Directional Light",
-            "Point Light",
-            "Spot Light"
-        };
-        ImGui::Text("Light");
-        if (ImGui::Combo("Light Type", &curr_light_item, light_modes, ARRAYSIZE(light_modes)))
-        {
-            m_PSConstantBuffer.dirLight = (curr_light_item == 0 ? m_DirLight : DirectionalLight());
-            m_PSConstantBuffer.pointLight = (curr_light_item == 1 ? m_PointLight : PointLight());
-            m_PSConstantBuffer.spotLight = (curr_light_item == 2 ? m_SpotLight : SpotLight());
-        }
-
-        bool light_changed = false;
-        // 添加ID区分同名控件
-        ImGui::PushID(curr_light_item);
-        if (curr_light_item == 0)
-        {
-            ImGui::ColorEdit3("Ambient", &m_PSConstantBuffer.dirLight.ambient.x);
-            ImGui::ColorEdit3("Diffuse", &m_PSConstantBuffer.dirLight.diffuse.x);
-            ImGui::ColorEdit3("Specular", &m_PSConstantBuffer.dirLight.specular.x);
-        }
-        else if (curr_light_item == 1)
-        {
-            ImGui::ColorEdit3("Ambient", &m_PSConstantBuffer.pointLight.ambient.x);
-            ImGui::ColorEdit3("Diffuse", &m_PSConstantBuffer.pointLight.diffuse.x);
-            ImGui::ColorEdit3("Specular", &m_PSConstantBuffer.pointLight.specular.x);
-            ImGui::InputFloat("Range", &m_PSConstantBuffer.pointLight.range);
-            ImGui::InputFloat3("Attenutation", &m_PSConstantBuffer.pointLight.att.x);
-        }
-        else
-        {
-            ImGui::ColorEdit3("Ambient", &m_PSConstantBuffer.spotLight.ambient.x);
-            ImGui::ColorEdit3("Diffuse", &m_PSConstantBuffer.spotLight.diffuse.x);
-            ImGui::ColorEdit3("Specular", &m_PSConstantBuffer.spotLight.specular.x);
-            ImGui::InputFloat("Spot", &m_PSConstantBuffer.spotLight.spot);
-            ImGui::InputFloat("Range", &m_PSConstantBuffer.spotLight.range);
-            ImGui::InputFloat3("Attenutation", &m_PSConstantBuffer.spotLight.att.x);
-        }
-        ImGui::PopID();
-
-
-        if (ImGui::Checkbox("WireFrame Mode", &m_IsWireframeMode))
-        {
-            m_pd3dImmediateContext->RSSetState(m_IsWireframeMode ? m_pRSWireframe.Get() : nullptr);
+            else
+            {
+                m_CurrMode = ShowMode::FireAnim;
+                m_CurrFrame = 0;
+                m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout2D.Get());
+                auto meshData = Geometry::Create2DShow();
+                ResetMesh(meshData);
+                m_pd3dImmediateContext->VSSetShader(m_pVertexShader2D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShader(m_pPixelShader2D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pFireAnims[0].GetAddressOf());
+            }
         }
     }
     ImGui::End();
     ImGui::Render();
 
-    // 更新常量缓冲区，让立方体转起来
-    D3D11_MAPPED_SUBRESOURCE mappedData;
-    HR(m_pd3dImmediateContext->Map(m_pConstantBuffers[0].Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
-    memcpy_s(mappedData.pData, sizeof(VSConstantBuffer), &m_VSConstantBuffer, sizeof(VSConstantBuffer));
-    m_pd3dImmediateContext->Unmap(m_pConstantBuffers[0].Get(), 0);
+    if (m_CurrMode == ShowMode::WoodCrate)
+    {
+        static float phi = 0.0f, theta = 0.0f;
+        phi += 0.0001f, theta += 0.00015f;
+        XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
+        m_VSConstantBuffer.world = XMMatrixTranspose(W);
+        m_VSConstantBuffer.worldInvTranspose = XMMatrixTranspose(InverseTranspose(W));
 
-    HR(m_pd3dImmediateContext->Map(m_pConstantBuffers[1].Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
-    memcpy_s(mappedData.pData, sizeof(PSConstantBuffer), &m_PSConstantBuffer, sizeof(PSConstantBuffer));
-    m_pd3dImmediateContext->Unmap(m_pConstantBuffers[1].Get(), 0);
+        // 更新常量缓冲区，让立方体转起来
+        D3D11_MAPPED_SUBRESOURCE mappedData;
+        HR(m_pd3dImmediateContext->Map(m_pConstantBuffers[0].Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+        memcpy_s(mappedData.pData, sizeof(VSConstantBuffer), &m_VSConstantBuffer, sizeof(VSConstantBuffer));
+        m_pd3dImmediateContext->Unmap(m_pConstantBuffers[0].Get(), 0);
+    }
+    else if (m_CurrMode == ShowMode::FireAnim)
+    {
+        // 用于限制在1秒60帧
+        static float totDeltaTime = 0;
+
+        totDeltaTime += dt;
+        if (totDeltaTime > 1.0f / 60)
+        {
+            totDeltaTime -= 1.0f / 60;
+            m_CurrFrame = (m_CurrFrame + 1) % 120;
+            m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pFireAnims[m_CurrFrame].GetAddressOf());
+        }		
+    }
 }
-
 void GameApp::DrawScene()
 {
     assert(m_pd3dImmediateContext);
     assert(m_pSwapChain);
     static float black[4] = {0.0f, 0.0f, 0.0f, 1.0f}; // RGBA = (0,0,0,255)
-    m_pd3dImmediateContext->ClearRenderTargetView(m_pRenderTargetView.Get(), black);
+    m_pd3dImmediateContext->ClearRenderTargetView(m_pRenderTargetView.Get(), reinterpret_cast<const float*>(&Colors::Black));
     m_pd3dImmediateContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+    
     // 绘制几何模型
     m_pd3dImmediateContext->DrawIndexed(m_IndexCount, 0, 0);
     // 可以在这之前调用ImGui的UI部分
@@ -256,44 +201,34 @@ void GameApp::DrawScene()
     // 因此需要在此之前将后备缓冲区绑定到渲染管线上
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-    // 绘制Direct2D部分
-    if (m_pd2dRenderTarget)
-    {
-        m_pd2dRenderTarget->BeginDraw();
-        std::wstring info = L"Lighting Demo\n字体测试\n";
-        if (m_IsWireframeMode)
-        {
-            info += L"Wireframe Mode\n";
-        }else
-        {
-            info += L"Draw Mode\n";
-        }
-
-        m_pd2dRenderTarget->DrawTextW(
-            info.c_str(), (UINT)info.length(),
-            m_pTextFormat.Get(),
-            D2D1::RectF(0.0f, 0.0f, 600.0f, 200.0f),
-            m_pColorBrush.Get()
-        );
-        HR(m_pd2dRenderTarget->EndDraw());
-    }
-    
-
     HR(m_pSwapChain->Present(0, 0));
 }
 bool GameApp::InitShaders()
 {
     ComPtr<ID3DBlob> blob = nullptr;
 
-    HR(CreateShaderFromFile(L"Shaders/Light_VS.cso", L"Shaders/Light_VS.hlsl", "VS", "vs_5_0", blob.GetAddressOf()));
-    HR(m_pd3dDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pVertexShader.GetAddressOf()));
+    HR(CreateShaderFromFile(L"Shaders/Basic_2D_VS.cso", L"Shaders/Basic_2D_VS.hlsl", "VS", "vs_5_0", blob.GetAddressOf()));
+    HR(m_pd3dDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pVertexShader2D.GetAddressOf()));
 
-    m_pd3dDevice->CreateInputLayout(VertexPosNormalColor::inputLayout, ARRAYSIZE(VertexPosNormalColor::inputLayout),
-                                    blob->GetBufferPointer(), blob->GetBufferSize(), m_pVertexLayout.GetAddressOf());
+    m_pd3dDevice->CreateInputLayout(VertexPosTex::inputLayout, ARRAYSIZE(VertexPosTex::inputLayout),
+                                    blob->GetBufferPointer(), blob->GetBufferSize(), m_pVertexLayout2D.GetAddressOf());
 
-    HR(CreateShaderFromFile(L"Shaders/Light_PS.cso", L"Shaders/Light_PS.hlsl", "PS", "ps_5_0", blob.GetAddressOf()));
-    HR(m_pd3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pPixelShader.GetAddressOf()));
+    HR(CreateShaderFromFile(L"Shaders/Basic_2D_PS.cso", L"Shaders/Basic_2D_PS.hlsl", "PS", "ps_5_0", blob.GetAddressOf()));
+    HR(m_pd3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pPixelShader2D.GetAddressOf()));
 
+
+    // 创建顶点着色器(3D)
+    HR(CreateShaderFromFile(L"Shaders\\Basic_3D_VS.cso", L"Shaders\\Basic_3D_VS.hlsl", "VS", "vs_5_0", blob.ReleaseAndGetAddressOf()));
+    HR(m_pd3dDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pVertexShader3D.GetAddressOf()));
+    // 创建顶点布局(3D)
+    HR(m_pd3dDevice->CreateInputLayout(VertexPosNormalTex::inputLayout, ARRAYSIZE(VertexPosNormalTex::inputLayout),
+        blob->GetBufferPointer(), blob->GetBufferSize(), m_pVertexLayout3D.GetAddressOf()));
+
+    // 创建像素着色器(3D)
+    HR(CreateShaderFromFile(L"Shaders\\Basic_3D_PS.cso", L"Shaders\\Basic_3D_PS.hlsl", "PS", "ps_5_0", blob.ReleaseAndGetAddressOf()));
+    HR(m_pd3dDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, m_pPixelShader3D.GetAddressOf()));
+
+    
     return true;
 }
 
@@ -323,29 +258,38 @@ bool GameApp::InitResources()
     cbd.ByteWidth = sizeof(PSConstantBuffer);
     HR(m_pd3dDevice->CreateBuffer(&cbd, nullptr, m_pConstantBuffers[1].GetAddressOf()));
 
+    
     // ******************
-    // 初始化默认光照
-    // 方向光
-    m_DirLight.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-    m_DirLight.diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
-    m_DirLight.specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-    m_DirLight.direction = XMFLOAT3(-0.577f, -0.577f, 0.577f);
-    // 点光
-    m_PointLight.position = XMFLOAT3(0.0f, 0.0f, -10.0f);
-    m_PointLight.ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
-    m_PointLight.diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
-    m_PointLight.specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-    m_PointLight.att = XMFLOAT3(0.0f, 0.1f, 0.0f);
-    m_PointLight.range = 25.0f;
-    // 聚光灯
-    m_SpotLight.position = XMFLOAT3(0.0f, 0.0f, -5.0f);
-    m_SpotLight.direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
-    m_SpotLight.ambient = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-    m_SpotLight.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_SpotLight.specular = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_SpotLight.att = XMFLOAT3(1.0f, 0.0f, 0.0f);
-    m_SpotLight.spot = 12.0f;
-    m_SpotLight.range = 10000.0f;
+    // 初始化纹理和采样器状态
+
+    
+    // 初始化木箱纹理
+
+    HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"..\\..\\Resources\\Texture\\WoodCrate.dds", nullptr, m_pWoodCrate.GetAddressOf()));
+    WCHAR strFile[128];
+    m_pFireAnims.resize(120);
+    for (int i = 1; i <= 120; i++)
+    {
+        wsprintf(strFile, L"..\\..\\Resources\\Texture\\FireAnim\\Fire%03d.bmp", i);
+        CreateWICTextureFromFile(m_pd3dDevice.Get(), strFile, nullptr,m_pFireAnims[i-1].GetAddressOf());
+    }
+
+    // 初始化采样器状态
+    D3D11_SAMPLER_DESC sampDesc{};
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    HR(m_pd3dDevice->CreateSamplerState(&sampDesc, m_pSamplerState.GetAddressOf()));
+    
+
+    // ******************
+    // 初始化常量缓冲区的值
+    //
+
     // 初始化用于VS的常量缓冲区的值
     m_VSConstantBuffer.world = XMMatrixIdentity();			
     m_VSConstantBuffer.view = XMMatrixTranspose(XMMatrixLookAtLH(
@@ -357,11 +301,20 @@ bool GameApp::InitResources()
     m_VSConstantBuffer.worldInvTranspose = XMMatrixIdentity();
     
     // 初始化用于PS的常量缓冲区的值
+    // 这里只使用一盏点光来演示
+    m_PSConstantBuffer.pointLight[0].position = XMFLOAT3(0.0f, 0.0f, -10.0f);
+    m_PSConstantBuffer.pointLight[0].ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
+    m_PSConstantBuffer.pointLight[0].diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
+    m_PSConstantBuffer.pointLight[0].specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+    m_PSConstantBuffer.pointLight[0].att = XMFLOAT3(0.0f, 0.1f, 0.0f);
+    m_PSConstantBuffer.pointLight[0].range = 25.0f;
+    m_PSConstantBuffer.numDirLight = 0;
+    m_PSConstantBuffer.numPointLight = 1;
+    m_PSConstantBuffer.numSpotLight = 0;
+    // 初始化材质
     m_PSConstantBuffer.material.ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
     m_PSConstantBuffer.material.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_PSConstantBuffer.material.specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 5.0f);
-    // 使用默认平行光
-    m_PSConstantBuffer.dirLight = m_DirLight;
+    m_PSConstantBuffer.material.specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 5.0f);
     // 注意不要忘记设置此处的观察位置，否则高亮部分会有问题
     m_PSConstantBuffer.eyePos = XMFLOAT4(0.0f, 0.0f, -5.0f, 0.0f);
 
@@ -372,39 +325,24 @@ bool GameApp::InitResources()
     m_pd3dImmediateContext->Unmap(m_pConstantBuffers[1].Get(), 0);
 
     // ******************
-    // 初始化光栅化状态
-    //
-    D3D11_RASTERIZER_DESC rasterizerDesc;
-    ZeroMemory(&rasterizerDesc, sizeof(rasterizerDesc));
-    rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-    rasterizerDesc.CullMode = D3D11_CULL_NONE;
-    rasterizerDesc.FrontCounterClockwise = false;
-    rasterizerDesc.DepthClipEnable = true;
-    HR(m_pd3dDevice->CreateRasterizerState(&rasterizerDesc, m_pRSWireframe.GetAddressOf()));
-
-    // ******************
     // 给渲染管线各个阶段绑定好所需资源
-    //
-
     // 设置图元类型，设定输入布局
     m_pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout.Get());
-    // 将着色器绑定到渲染管线
-    m_pd3dImmediateContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
+    m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout3D.Get());
+    // 默认绑定3D着色器
+    m_pd3dImmediateContext->VSSetShader(m_pVertexShader3D.Get(), nullptr, 0);
     // VS常量缓冲区对应HLSL寄存于b0的常量缓冲区
     m_pd3dImmediateContext->VSSetConstantBuffers(0, 1, m_pConstantBuffers[0].GetAddressOf());
     // PS常量缓冲区对应HLSL寄存于b1的常量缓冲区
     m_pd3dImmediateContext->PSSetConstantBuffers(1, 1, m_pConstantBuffers[1].GetAddressOf());
-    m_pd3dImmediateContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
+    // 像素着色阶段设置好采样器
+    m_pd3dImmediateContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
+    m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pWoodCrate.GetAddressOf());
+    m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
 
-    // ******************
-    // 设置调试对象名
-    //
-    D3D11SetDebugObjectName(m_pVertexLayout.Get(), "VertexPosNormalTexLayout");
-    D3D11SetDebugObjectName(m_pConstantBuffers[0].Get(), "VSConstantBuffer");
-    D3D11SetDebugObjectName(m_pConstantBuffers[1].Get(), "PSConstantBuffer");
-    D3D11SetDebugObjectName(m_pVertexShader.Get(), "Light_VS");
-    D3D11SetDebugObjectName(m_pPixelShader.Get(), "Light_PS");
+    
+
+    
     return true;
 }
 
@@ -433,27 +371,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 
     return theApp.Run();
 }
-bool GameApp::ResetMesh(const Geometry::MeshData<VertexPosNormalColor>& meshData)
+template<class VertexType>
+bool GameApp::ResetMesh(const Geometry::MeshData<VertexType>& meshData)
 {
     // 释放旧资源
     m_pVertexBuffer.Reset();
     m_pIndexBuffer.Reset();
 
+
+
     // 设置顶点缓冲区描述
     D3D11_BUFFER_DESC vbd;
     ZeroMemory(&vbd, sizeof(vbd));
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
-    vbd.ByteWidth = (UINT)meshData.vertexVec.size() * sizeof(VertexPosNormalColor);
+    vbd.ByteWidth = (UINT)meshData.vertexVec.size() * sizeof(VertexType);
     vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbd.CPUAccessFlags = 0;
     // 新建顶点缓冲区
     D3D11_SUBRESOURCE_DATA InitData;
     ZeroMemory(&InitData, sizeof(InitData));
     InitData.pSysMem = meshData.vertexVec.data();
-    HR(m_pd3dDevice->CreateBuffer(&vbd, &InitData, m_pVertexBuffer.GetAddressOf()));
+    HR(m_pd3dDevice->CreateBuffer(&vbd, &InitData, m_pVertexBuffer.ReleaseAndGetAddressOf()));
 
     // 输入装配阶段的顶点缓冲区设置
-    UINT stride = sizeof(VertexPosNormalColor);	// 跨越字节数
+    UINT stride = sizeof(VertexType);			// 跨越字节数
     UINT offset = 0;							// 起始偏移量
 
     m_pd3dImmediateContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
@@ -465,12 +406,12 @@ bool GameApp::ResetMesh(const Geometry::MeshData<VertexPosNormalColor>& meshData
     D3D11_BUFFER_DESC ibd;
     ZeroMemory(&ibd, sizeof(ibd));
     ibd.Usage = D3D11_USAGE_IMMUTABLE;
-    ibd.ByteWidth = m_IndexCount * sizeof(DWORD);
+    ibd.ByteWidth = sizeof(DWORD) * m_IndexCount;
     ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
     ibd.CPUAccessFlags = 0;
     // 新建索引缓冲区
     InitData.pSysMem = meshData.indexVec.data();
-    HR(m_pd3dDevice->CreateBuffer(&ibd, &InitData, m_pIndexBuffer.GetAddressOf()));
+    HR(m_pd3dDevice->CreateBuffer(&ibd, &InitData, m_pIndexBuffer.ReleaseAndGetAddressOf()));
     // 输入装配阶段的索引缓冲区设置
     m_pd3dImmediateContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
