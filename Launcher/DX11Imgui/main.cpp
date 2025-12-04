@@ -140,6 +140,34 @@ void GameApp::ShowImguiControls(float dt)
         }
     }
     ImGui::End();
+    // 处理鼠标输入以操作物体
+    ImGuiIO& io = ImGui::GetIO();
+
+    // 不允许在操作UI时操作物体
+    if (!ImGui::IsAnyItemActive())
+    {
+        // 鼠标左键拖动平移
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            tx += io.MouseDelta.x * 0.01f;
+            ty -= io.MouseDelta.y * 0.01f;
+        }
+        // 鼠标右键拖动旋转
+        else if (ImGui::IsMouseDragging(ImGuiMouseButton_Right))
+        {
+            phi -= io.MouseDelta.y * 0.01f;
+            theta -= io.MouseDelta.x * 0.01f;
+        }
+        // 鼠标滚轮缩放
+        else if (io.MouseWheel != 0.0f)
+        {
+            scale += 0.02f * io.MouseWheel;
+            if (scale > 2.0f)
+                scale = 2.0f;
+            else if (scale < 0.2f)
+                scale = 0.2f;
+        }
+    }
 }
 
 
@@ -153,7 +181,8 @@ void GameApp::UpdateScene(float dt)
     //-----------------------------
 
     phi += 0.3f * dt, theta += 0.37f * dt;
-    m_ConstantBuffer.world = XMMatrixTranspose(XMMatrixRotationX(phi) * XMMatrixRotationY(theta));
+    m_ConstantBuffer.world = XMMatrixTranspose(XMMatrixScalingFromVector(XMVectorSet(scale, scale, scale, 1.0f)) * XMMatrixRotationX(phi) * XMMatrixRotationY(theta)*
+        XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(tx, ty, 0.0f));
     // 更新常量缓冲区，让立方体转起来
     D3D11_MAPPED_SUBRESOURCE mappedData;
     HR(m_pd3dImmediateContext->Map(m_pConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
