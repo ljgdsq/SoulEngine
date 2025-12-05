@@ -153,7 +153,6 @@ void GameApp::UpdateScene(float dt)
         }
     }
     ImGui::End();
-    ImGui::Render();
 
     if (m_CurrMode == ShowMode::WoodCrate)
     {
@@ -339,9 +338,6 @@ bool GameApp::InitResources()
     m_pd3dImmediateContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
     m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pWoodCrate.GetAddressOf());
     m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
-
-    
-
     
     return true;
 }
