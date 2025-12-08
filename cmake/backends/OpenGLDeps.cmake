@@ -5,7 +5,7 @@
 if (NOT SOULENGINE_WITH_OPENGL)
   return()
 endif()
-
+message("Including OpenGL dependencies")
 option(SOULENGINE_FETCH_THIRDPARTY "Allow fetching third-party deps" ON)
 
 # Keep the VS solution tidy: place everything created here under thirdlib/OpenGL
